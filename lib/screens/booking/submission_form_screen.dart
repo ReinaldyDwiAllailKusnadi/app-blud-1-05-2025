@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../core/theme/app_theme.dart';
-import '../../data/providers/auth_provider.dart';
-import '../../data/providers/data_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/submission_provider.dart';
 import '../auth/login_screen.dart';
 
 class SubmissionFormScreen extends StatefulWidget {
@@ -31,7 +31,10 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => Provider.of<DataProvider>(context, listen: false).fetchLocationOptions());
+    Future.microtask(() {
+      if (!mounted) return;
+      Provider.of<SubmissionProvider>(context, listen: false).fetchLocationOptions();
+    });
   }
 
   @override
@@ -86,7 +89,7 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
     if (_applLetter != null) formData['appl_letter'] = MultipartFile.fromFileSync(_applLetter!.path!, filename: _applLetter!.name);
     if (_actvLetter != null) formData['actv_letter'] = MultipartFile.fromFileSync(_actvLetter!.path!, filename: _actvLetter!.name);
 
-    final data = Provider.of<DataProvider>(context, listen: false);
+    final data = Provider.of<SubmissionProvider>(context, listen: false);
     final success = await data.submitBooking(formData);
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pengajuan berhasil dikirim!'), backgroundColor: AppTheme.successColor));
@@ -114,7 +117,7 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Form Pengajuan Sewa')),
-      body: Consumer<DataProvider>(builder: (context, data, _) {
+      body: Consumer<SubmissionProvider>(builder: (context, data, _) {
         return SingleChildScrollView(
           padding: const EdgeInsets.all(AppTheme.spacingLg),
           child: Form(
@@ -134,7 +137,7 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
               const SizedBox(height: 14),
               // Location dropdown
               DropdownButtonFormField<String>(
-                initialValue: _selectedLocation,
+                value: _selectedLocation,
                 decoration: const InputDecoration(labelText: 'Lokasi', prefixIcon: Icon(Icons.location_on_outlined)),
                 items: data.locationOptions.map((l) => DropdownMenuItem(value: l.name, child: Text(l.name))).toList(),
                 onChanged: (v) => setState(() => _selectedLocation = v),

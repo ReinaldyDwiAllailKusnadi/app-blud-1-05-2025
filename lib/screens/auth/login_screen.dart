@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../../core/theme/app_theme.dart';
-import '../../data/providers/auth_provider.dart';
-import '../main/main_screen.dart';
 import 'register_screen.dart';
+import 'shared_auth_widgets.dart';
+import '../../providers/auth_provider.dart';
+import '../main/main_screen.dart';
 
+/// Login Screen - BLUD Pariwisata
+/// Full screen native Flutter, tanpa phone frame/mockup.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -13,10 +16,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _obscure = true;
+  bool _rememberMe = false;
 
   @override
   void dispose() {
@@ -25,38 +28,31 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
-    final auth = Provider.of<AuthProvider>(context, listen: false);
-    final success = await auth.login(_emailCtrl.text.trim(), _passCtrl.text);
-    if (success && mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const MainScreen()),
-      );
-    } else if (mounted && auth.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(auth.errorMessage!),
-          backgroundColor: AppTheme.errorColor,
-        ),
-      );
-    }
-  }
+  Future<void> _handleLogin() async {
+    final email = _emailCtrl.text.trim();
+    final password = _passCtrl.text;
 
-  Future<void> _googleLogin() async {
-    final auth = Provider.of<AuthProvider>(context, listen: false);
-    final success = await auth.loginWithGoogle();
-    if (success && mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const MainScreen()),
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email dan password wajib diisi.')),
       );
-    } else if (mounted && auth.errorMessage != null) {
+      return;
+    }
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final success = await authProvider.login(email, password);
+
+    if (success && mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => MainScreen()),
+        (route) => false,
+      );
+    } else if (mounted && authProvider.errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(auth.errorMessage!),
-          backgroundColor: AppTheme.errorColor,
+          content: Text(authProvider.errorMessage!),
+          backgroundColor: Colors.red,
         ),
       );
     }
@@ -65,177 +61,286 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AuthColors.bgContainer,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppTheme.spacingLg),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 48),
-              // Logo
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  gradient: AppTheme.primaryGradient,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.3),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
+              // ── Back Button ──
+              Padding(
+                padding: const EdgeInsets.only(left: 14, top: 10),
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    child: Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 20,
+                      color: Colors.grey.shade700,
                     ),
-                  ],
+                  ),
                 ),
-                child: const Icon(Icons.landscape_rounded,
-                    size: 44, color: Colors.white),
               ),
-              const SizedBox(height: 32),
-              Text(
-                'Selamat Datang',
-                style: Theme.of(context).textTheme.displayMedium,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Masuk ke akun BLUD Pariwisata kamu',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 40),
 
-              // Form
-              Form(
-                key: _formKey,
+              // ── Main Content ──
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 26),
                 child: Column(
                   children: [
-                    TextFormField(
-                      controller: _emailCtrl,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: Icon(Icons.email_outlined),
+                    const SizedBox(height: 20),
+
+                    // ── Logo ──
+                    const LogoBlud(),
+
+                    const SizedBox(height: 42),
+
+                    // ── Title ──
+                    Text(
+                      'Login ke Akun Anda',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w700,
+                        color: AuthColors.textPrimary,
+                        height: 1.1,
+                        letterSpacing: -0.03 * 30,
                       ),
-                      validator: (v) {
-                        if (v == null || v.isEmpty) return 'Email wajib diisi';
-                        if (!v.contains('@')) return 'Email tidak valid';
-                        return null;
-                      },
                     ),
-                    const SizedBox(height: 16),
-                    TextFormField(
+
+                    const SizedBox(height: 12),
+
+                    // ── Subtitle ──
+                    Text(
+                      'Temukan keindahan wisata dan\nbudaya lokal bersama kami.',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: AuthColors.textSubtitle,
+                        height: 1.4,
+                        letterSpacing: -0.01 * 15,
+                      ),
+                    ),
+
+                    const SizedBox(height: 74),
+
+                    // ── Email Input ──
+                    _AuthTextField(
+                      controller: _emailCtrl,
+                      hintText: 'Email',
+                      prefixIcon: Icons.email_rounded,
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ── Password Input ──
+                    _AuthTextField(
                       controller: _passCtrl,
+                      hintText: 'Password',
+                      prefixIcon: Icons.lock_rounded,
                       obscureText: _obscure,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock_outlined),
-                        suffixIcon: IconButton(
-                          icon: Icon(_obscure
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined),
-                          onPressed: () =>
-                              setState(() => _obscure = !_obscure),
+                      suffixIcon: GestureDetector(
+                        onTap: () => setState(() => _obscure = !_obscure),
+                        child: Icon(
+                          _obscure
+                              ? Icons.visibility_off_rounded
+                              : Icons.visibility_rounded,
+                          size: 22,
+                          color: AuthColors.inputIcon,
                         ),
                       ),
-                      validator: (v) =>
-                          v == null || v.isEmpty ? 'Password wajib diisi' : null,
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
 
-              // Login button
-              Consumer<AuthProvider>(
-                builder: (context, auth, _) {
-                  return SizedBox(
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: auth.isLoading ? null : _login,
-                      child: auth.isLoading
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                color: Colors.white,
+                    const SizedBox(height: 16),
+
+                    // ── Remember Me + Forgot Password Row ──
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Checkbox + Label
+                        GestureDetector(
+                          onTap: () => setState(() => _rememberMe = !_rememberMe),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: Checkbox(
+                                  value: _rememberMe,
+                                  onChanged: (v) => setState(() => _rememberMe = v ?? false),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  side: BorderSide(
+                                    color: Colors.grey.shade400,
+                                    width: 1.5,
+                                  ),
+                                  activeColor: AuthColors.bluePrimary,
+                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  visualDensity: VisualDensity.compact,
+                                ),
                               ),
-                            )
-                          : const Text('Masuk',
-                              style: TextStyle(fontSize: 16)),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Ingat saya',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: AuthColors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
 
-              // Divider
-              Row(
-                children: [
-                  const Expanded(child: Divider()),
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text('atau',
-                        style: Theme.of(context).textTheme.bodySmall),
-                  ),
-                  const Expanded(child: Divider()),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Google login
-              SizedBox(
-                height: 52,
-                child: OutlinedButton.icon(
-                  onPressed: _googleLogin,
-                  icon: const Icon(Icons.g_mobiledata_rounded, size: 28),
-                  label: const Text('Masuk dengan Google'),
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Register link
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Belum punya akun? ',
-                      style: Theme.of(context).textTheme.bodyMedium),
-                  GestureDetector(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const RegisterScreen()),
+                        // Forgot Password
+                        GestureDetector(
+                          onTap: () {
+                            // TODO: Navigate to forgot password
+                          },
+                          child: Text(
+                            'Lupa password?',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AuthColors.signUpBlue,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    child: const Text(
-                      'Daftar',
-                      style: TextStyle(
-                        color: AppTheme.primaryColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
 
-              const SizedBox(height: 16),
-              // Skip login (browse as guest)
-              Center(
-                child: TextButton(
-                  onPressed: () => Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const MainScreen()),
-                  ),
-                  child: Text(
-                    'Lewati, lihat-lihat dulu →',
-                    style: TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontWeight: FontWeight.w500,
+                    const SizedBox(height: 34),
+
+                    // ── Login Button (Gradient) ──
+                    Consumer<AuthProvider>(
+                      builder: (context, auth, child) {
+                        return GradientButton(
+                          label: auth.isLoading ? 'Loading...' : 'Login',
+                          onTap: auth.isLoading ? () {} : _handleLogin,
+                        );
+                      },
                     ),
-                  ),
+
+                    const SizedBox(height: 46),
+
+                    // ── Footer ──
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Belum punya akun? ',
+                          style: GoogleFonts.inter(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w500,
+                            color: AuthColors.footerGray,
+                            letterSpacing: -0.02 * 14.5,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const RegisterScreen(),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            'Daftar di sini',
+                            style: GoogleFonts.inter(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w600,
+                              color: AuthColors.signUpBlue,
+                              letterSpacing: -0.02 * 14.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 40),
+                  ],
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// Auth Text Field (Reusable rounded pill input)
+// ═══════════════════════════════════════════════════════════
+class _AuthTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hintText;
+  final IconData prefixIcon;
+  final bool obscureText;
+  final Widget? suffixIcon;
+  final TextInputType keyboardType;
+
+  const _AuthTextField({
+    required this.controller,
+    required this.hintText,
+    required this.prefixIcon,
+    this.obscureText = false,
+    this.suffixIcon,
+    this.keyboardType = TextInputType.text,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 56,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: const Color(0xFFD1D5DB), width: 1),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 20),
+          Icon(
+            prefixIcon,
+            size: 22,
+            color: AuthColors.inputIcon,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              obscureText: obscureText,
+              keyboardType: keyboardType,
+              style: GoogleFonts.inter(
+                fontSize: 15.5,
+                fontWeight: FontWeight.w400,
+                color: AuthColors.textPrimary,
+              ),
+              decoration: InputDecoration(
+                hintText: hintText,
+                hintStyle: GoogleFonts.inter(
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w400,
+                  color: const Color(0xFF9CA3AF),
+                ),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+                isDense: true,
+              ),
+            ),
+          ),
+          if (suffixIcon != null) ...[
+            suffixIcon!,
+            const SizedBox(width: 16),
+          ],
+        ],
       ),
     );
   }

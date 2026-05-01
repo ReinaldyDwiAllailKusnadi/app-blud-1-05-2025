@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
-import '../../data/providers/auth_provider.dart';
-import '../../data/providers/data_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/submission_provider.dart';
 import '../auth/login_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -18,7 +18,10 @@ class _SubmissionHistoryScreenState extends State<SubmissionHistoryScreen> {
     super.initState();
     final auth = Provider.of<AuthProvider>(context, listen: false);
     if (auth.isLoggedIn) {
-      Future.microtask(() => Provider.of<DataProvider>(context, listen: false).fetchHistory());
+      Future.microtask(() {
+        if (!mounted) return;
+        Provider.of<SubmissionProvider>(context, listen: false).fetchHistory();
+      });
     }
   }
 
@@ -35,7 +38,7 @@ class _SubmissionHistoryScreenState extends State<SubmissionHistoryScreen> {
       ]));
     }
 
-    return Consumer<DataProvider>(builder: (context, data, _) {
+    return Consumer<SubmissionProvider>(builder: (context, data, _) {
       if (data.isLoading) return const Center(child: CircularProgressIndicator());
       if (data.submissions.isEmpty) {
         return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [

@@ -2,22 +2,38 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Color Palette - Teal & Nature inspired for tourism
+  // Brand Colors
   static const Color primaryColor = Color(0xFF0D9488);
   static const Color primaryDark = Color(0xFF0F766E);
   static const Color primaryLight = Color(0xFF5EEAD4);
   static const Color secondaryColor = Color(0xFF6366F1);
   static const Color accentColor = Color(0xFFF59E0B);
+  
+  // Specific UI Colors
+  static const Color navBlue = Color(0xFF1C7EE8);
+  static const Color headerBlue = Color(0xFF0B8AEE);
+  static const Color deepPurple = Color(0xFF5C4A9C);
+  static const Color pureBlack = Color(0xFF111111);
+
+  // Neutral Colors
   static const Color backgroundColor = Color(0xFFF8FAFC);
   static const Color surfaceColor = Color(0xFFFFFFFF);
   static const Color cardColor = Color(0xFFFFFFFF);
+  static const Color dividerColor = Color(0xFFE2E8F0);
+  static const Color navUnselected = Color(0xFF9CA3AF);
+  
+  // Functional Colors
   static const Color errorColor = Color(0xFFEF4444);
   static const Color successColor = Color(0xFF22C55E);
   static const Color warningColor = Color(0xFFF59E0B);
+  static const Color infoColor = Color(0xFF3B82F6);
+
+  // Text Colors
   static const Color textPrimary = Color(0xFF1E293B);
   static const Color textSecondary = Color(0xFF64748B);
   static const Color textLight = Color(0xFF94A3B8);
-  static const Color dividerColor = Color(0xFFE2E8F0);
+
+  // Shimmer Colors
   static const Color shimmerBase = Color(0xFFE2E8F0);
   static const Color shimmerHighlight = Color(0xFFF1F5F9);
 
@@ -31,6 +47,12 @@ class AppTheme {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [Color(0xFF0D9488), Color(0xFF6366F1)],
+  );
+
+  static const LinearGradient blueHeaderGradient = LinearGradient(
+    colors: [Color(0xFF06B8F9), Color(0xFF0B8AEE), Color(0xFF1844D9)],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
   );
 
   static const LinearGradient heroGradient = LinearGradient(

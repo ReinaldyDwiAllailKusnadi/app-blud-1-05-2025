@@ -14,7 +14,10 @@ class _FasilitasScreenState extends State<FasilitasScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => Provider.of<DataProvider>(context, listen: false).fetchFasilitas(widget.slug));
+    Future.microtask(() {
+      if (!mounted) return;
+      Provider.of<DataProvider>(context, listen: false).fetchFasilitas(widget.slug);
+    });
   }
 
   @override

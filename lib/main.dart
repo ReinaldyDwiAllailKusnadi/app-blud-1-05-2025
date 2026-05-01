@@ -1,13 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import 'core/theme/app_theme.dart';
-import 'data/providers/auth_provider.dart';
-import 'data/providers/data_provider.dart';
+import 'core/network/dio_client.dart';
+import 'services/auth_service.dart';
+import 'services/content_service.dart';
+import 'services/event_service.dart';
+import 'services/submission_service.dart';
+import 'providers/auth_provider.dart';
+import 'providers/content_provider.dart';
+import 'providers/event_provider.dart';
+import 'providers/submission_provider.dart';
+import 'core/services/cache_service.dart';
 import 'screens/splash/splash_screen.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const BludApp());
+  await CacheService.init();
+  
+  // Dependency Injection Sederhana
+  final dioClient = DioClient();
+  final authService = AuthService(dioClient);
+  final contentService = ContentService(dioClient);
+  final eventService = EventService(dioClient);
+  final submissionService = SubmissionService(dioClient);
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider(authService, dioClient),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ContentProvider(contentService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => EventProvider(eventService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => SubmissionProvider(submissionService),
+        ),
+      ],
+      child: const BludApp(),
+    ),
+  );
 }
 
 class BludApp extends StatelessWidget {
@@ -15,17 +51,11 @@ class BludApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => DataProvider()),
-      ],
-      child: MaterialApp(
-        title: 'BLUD Pariwisata',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        home: const SplashScreen(),
-      ),
+    return MaterialApp(
+      title: 'BLUD Pariwisata',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      home: const SplashScreen(),
     );
   }
 }

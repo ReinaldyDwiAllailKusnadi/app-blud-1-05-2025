@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import '../../core/services/dio_client.dart';
+import '../core/services/dio_client.dart';
 import '../models/models.dart';
+import '../../core/providers/base_provider.dart';
 
-class DataProvider extends ChangeNotifier {
+class DataProvider extends BaseProvider {
   final DioClient _dio = DioClient();
 
   List<ContentModel> _contents = [];
@@ -16,8 +16,6 @@ class DataProvider extends ChangeNotifier {
   List<EventModel> _monthEvents = [];
   List<SubmissionModel> _submissions = [];
   List<ContentModel> _locationOptions = [];
-  bool _isLoading = false;
-  String? _errorMessage;
 
   List<ContentModel> get contents => _contents;
   List<NewsModel> get news => _news;
@@ -29,12 +27,10 @@ class DataProvider extends ChangeNotifier {
   List<EventModel> get monthEvents => _monthEvents;
   List<SubmissionModel> get submissions => _submissions;
   List<ContentModel> get locationOptions => _locationOptions;
-  bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
 
   Future<void> fetchHome() async {
-    _isLoading = true;
-    notifyListeners();
+    setLoading(true);
+    setError(null);
     try {
       final response = await _dio.get('/home');
       if (response.data['success'] == true) {
@@ -46,15 +42,14 @@ class DataProvider extends ChangeNotifier {
             .toList();
       }
     } catch (e) {
-      _errorMessage = 'Gagal memuat data beranda.';
+      handleDioError(e, defaultMessage: 'Gagal memuat data beranda.');
     }
-    _isLoading = false;
-    notifyListeners();
+    setLoading(false);
   }
 
   Future<void> fetchWisata() async {
-    _isLoading = true;
-    notifyListeners();
+    setLoading(true);
+    setError(null);
     try {
       final response = await _dio.get('/wisata');
       if (response.data['success'] == true) {
@@ -63,30 +58,28 @@ class DataProvider extends ChangeNotifier {
             .toList();
       }
     } catch (e) {
-      _errorMessage = 'Gagal memuat data wisata.';
+      handleDioError(e, defaultMessage: 'Gagal memuat data wisata.');
     }
-    _isLoading = false;
-    notifyListeners();
+    setLoading(false);
   }
 
   Future<void> fetchWisataDetail(String slug) async {
-    _isLoading = true;
-    notifyListeners();
+    setLoading(true);
+    setError(null);
     try {
       final response = await _dio.get('/wisata/$slug');
       if (response.data['success'] == true) {
         _selectedContent = ContentModel.fromJson(response.data['data']);
       }
     } catch (e) {
-      _errorMessage = 'Gagal memuat detail wisata.';
+      handleDioError(e, defaultMessage: 'Gagal memuat detail wisata.');
     }
-    _isLoading = false;
-    notifyListeners();
+    setLoading(false);
   }
 
   Future<void> fetchFasilitas(String slug) async {
-    _isLoading = true;
-    notifyListeners();
+    setLoading(true);
+    setError(null);
     try {
       final response = await _dio.get('/fasilitas/$slug');
       if (response.data['success'] == true) {
@@ -100,15 +93,14 @@ class DataProvider extends ChangeNotifier {
             .toList();
       }
     } catch (e) {
-      _errorMessage = 'Gagal memuat fasilitas.';
+      handleDioError(e, defaultMessage: 'Gagal memuat fasilitas.');
     }
-    _isLoading = false;
-    notifyListeners();
+    setLoading(false);
   }
 
   Future<void> fetchJadwalByLocation(String slug) async {
-    _isLoading = true;
-    notifyListeners();
+    setLoading(true);
+    setError(null);
     try {
       final response = await _dio.get('/booking/$slug');
       if (response.data['success'] == true) {
@@ -119,15 +111,14 @@ class DataProvider extends ChangeNotifier {
             .toList();
       }
     } catch (e) {
-      _errorMessage = 'Gagal memuat jadwal.';
+      handleDioError(e, defaultMessage: 'Gagal memuat jadwal.');
     }
-    _isLoading = false;
-    notifyListeners();
+    setLoading(false);
   }
 
   Future<void> fetchJadwalByMonth(String slug, String bulan) async {
-    _isLoading = true;
-    notifyListeners();
+    setLoading(true);
+    setError(null);
     try {
       final response = await _dio.get('/booking/$slug/$bulan');
       if (response.data['success'] == true) {
@@ -136,15 +127,14 @@ class DataProvider extends ChangeNotifier {
             .toList();
       }
     } catch (e) {
-      _errorMessage = 'Gagal memuat detail jadwal.';
+      handleDioError(e, defaultMessage: 'Gagal memuat detail jadwal.');
     }
-    _isLoading = false;
-    notifyListeners();
+    setLoading(false);
   }
 
   Future<void> fetchHistory() async {
-    _isLoading = true;
-    notifyListeners();
+    setLoading(true);
+    setError(null);
     try {
       final response = await _dio.get('/history');
       if (response.data['success'] == true) {
@@ -153,10 +143,9 @@ class DataProvider extends ChangeNotifier {
             .toList();
       }
     } catch (e) {
-      _errorMessage = 'Gagal memuat riwayat.';
+      handleDioError(e, defaultMessage: 'Gagal memuat riwayat.');
     }
-    _isLoading = false;
-    notifyListeners();
+    setLoading(false);
   }
 
   Future<void> fetchLocationOptions() async {
@@ -172,35 +161,21 @@ class DataProvider extends ChangeNotifier {
   }
 
   Future<bool> submitBooking(Map<String, dynamic> formData) async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
+    setLoading(true);
+    setError(null);
     try {
       final data = FormData.fromMap(formData);
       final response = await _dio.postMultipart('/submission', data: data);
       if (response.data['success'] == true) {
-        _isLoading = false;
-        notifyListeners();
+        setLoading(false);
         return true;
       } else {
-        _errorMessage = response.data['message'];
+        setError(response.data['message']);
       }
     } catch (e) {
-      _errorMessage = 'Gagal mengirim pengajuan.';
-      if (e is DioException && e.response?.data != null) {
-        final data = e.response!.data;
-        if (data is Map && data['message'] != null) {
-          _errorMessage = data['message'];
-        }
-      }
+      handleDioError(e, defaultMessage: 'Gagal mengirim pengajuan.');
     }
-    _isLoading = false;
-    notifyListeners();
+    setLoading(false);
     return false;
-  }
-
-  void clearError() {
-    _errorMessage = null;
-    notifyListeners();
   }
 }

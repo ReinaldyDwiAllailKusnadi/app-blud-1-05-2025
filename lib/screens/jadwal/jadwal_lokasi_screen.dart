@@ -15,7 +15,10 @@ class _JadwalLokasiScreenState extends State<JadwalLokasiScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => Provider.of<DataProvider>(context, listen: false).fetchWisata());
+    Future.microtask(() {
+      if (!mounted) return;
+      Provider.of<DataProvider>(context, listen: false).fetchWisata();
+    });
   }
 
   @override
@@ -83,7 +86,10 @@ class _JadwalPerLokasiScreenState extends State<JadwalPerLokasiScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => Provider.of<DataProvider>(context, listen: false).fetchJadwalByLocation(widget.slug));
+    Future.microtask(() {
+      if (!mounted) return;
+      Provider.of<DataProvider>(context, listen: false).fetchJadwalByLocation(widget.slug);
+    });
   }
 
   @override

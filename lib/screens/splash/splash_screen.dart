@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
-import '../../data/providers/auth_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../main/main_screen.dart';
-import '../auth/login_screen.dart';
+import '../auth/welcome_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -47,7 +47,7 @@ class _SplashScreenState extends State<SplashScreen>
       context,
       PageRouteBuilder(
         pageBuilder: (_, __, ___) =>
-            isLoggedIn ? const MainScreen() : const LoginScreen(),
+            isLoggedIn ? MainScreen() : const WelcomeScreen(),
         transitionsBuilder: (_, anim, __, child) =>
             FadeTransition(opacity: anim, child: child),
         transitionDuration: const Duration(milliseconds: 500),

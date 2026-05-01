@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../../core/theme/app_theme.dart';
-import '../../data/providers/auth_provider.dart';
-import '../../data/providers/data_provider.dart';
-import '../../data/models/models.dart';
-import '../wisata/wisata_detail_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../../providers/content_provider.dart';
+import '../../providers/event_provider.dart';
+import '../wisata/destination_detail_screen.dart';
+import '../../core/widgets/pressable.dart';
+import '../../core/widgets/skeleton.dart';
+import '../../core/theme/app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final VoidCallback? onSeeAllSchedule;
+  const HomeScreen({super.key, this.onSeeAllSchedule});
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -18,230 +21,469 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => Provider.of<DataProvider>(context, listen: false).fetchHome());
+    // Fetch data saat screen dibuka
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ContentProvider>().fetchHomeData();
+      context.read<EventProvider>().fetchJadwal();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Consumer<DataProvider>(builder: (context, data, _) {
-        if (data.isLoading && data.contents.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        return RefreshIndicator(
-          onRefresh: () => data.fetchHome(),
-          child: CustomScrollView(
-            slivers: [
-              // Hero Section
-              SliverToBoxAdapter(child: _buildHero(context)),
-              // Wisata Section
-              SliverToBoxAdapter(child: _buildSectionTitle(context, 'Objek Wisata', Icons.landscape_rounded)),
-              SliverToBoxAdapter(child: _buildWisataCarousel(data.contents)),
-              // News Section
-              SliverToBoxAdapter(child: _buildSectionTitle(context, 'Kabar Banyumas', Icons.newspaper_rounded)),
-              SliverToBoxAdapter(child: _buildNewsList(data.news)),
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
-            ],
-          ),
-        );
-      }),
-    );
-  }
-
-  Widget _buildHero(BuildContext context) {
-    final auth = Provider.of<AuthProvider>(context);
-    return Container(
-      height: 260,
-      decoration: const BoxDecoration(gradient: AppTheme.primaryGradient),
-      child: Stack(
+      backgroundColor: const Color(0xFFF8F9FA),
+      body: Stack(
         children: [
-          // Pattern overlay
+          // ── Main Scrollable Content ──
           Positioned.fill(
-            child: Opacity(
-              opacity: 0.1,
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: NetworkImage('https://www.transparenttextures.com/patterns/cubes.png'),
-                    repeat: ImageRepeat.repeat,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(AppTheme.spacingLg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: const Icon(Icons.landscape_rounded, color: Colors.white, size: 28),
-                      ),
-                      const SizedBox(width: 12),
-                      const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('BLUD', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800)),
-                          Text('Pariwisata Banyumas', style: TextStyle(color: Colors.white70, fontSize: 13)),
-                        ],
-                      ),
-                      const Spacer(),
-                      if (auth.isLoggedIn)
-                        CircleAvatar(
-                          backgroundColor: Colors.white.withValues(alpha: 0.2),
-                          child: Text(auth.user?.name.substring(0, 1).toUpperCase() ?? 'U',
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                        ),
-                    ],
-                  ),
-                  const Spacer(),
-                  const Text('Jelajahi Wisata\nBanyumas', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w800, height: 1.2)),
-                  const SizedBox(height: 8),
-                  Text('Temukan destinasi wisata terbaik dan booking tempat dengan mudah',
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14)),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+            child: Consumer2<ContentProvider, EventProvider>(
+              builder: (context, contentProv, eventProv, _) {
+                if (contentProv.isLoading && contentProv.featuredContents.isEmpty) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-  Widget _buildSectionTitle(BuildContext context, String title, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppTheme.spacingLg, AppTheme.spacingLg, AppTheme.spacingLg, AppTheme.spacingSm),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: AppTheme.primaryColor, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Text(title, style: Theme.of(context).textTheme.headlineMedium),
-        ],
-      ),
-    );
-  }
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    await contentProv.fetchHomeData();
+                    await eventProv.fetchJadwal();
+                  },
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // ── Blue Gradient Header ──
+                        _buildHeader(context),
 
-  Widget _buildWisataCarousel(List<ContentModel> contents) {
-    if (contents.isEmpty) {
-      return const Padding(padding: EdgeInsets.all(24), child: Center(child: Text('Belum ada data wisata')));
-    }
-    return SizedBox(
-      height: 220,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingLg),
-        itemCount: contents.length,
-        itemBuilder: (context, index) {
-          final item = contents[index];
-          return GestureDetector(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => WisataDetailScreen(slug: item.slug))),
-            child: Container(
-              width: 170,
-              margin: const EdgeInsets.only(right: 14),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10, offset: const Offset(0, 4))],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    item.imageUrl != null
-                        ? CachedNetworkImage(imageUrl: item.imageUrl!, fit: BoxFit.cover, placeholder: (_, __) => Container(color: AppTheme.shimmerBase))
-                        : Container(color: AppTheme.shimmerBase, child: const Icon(Icons.image, size: 40, color: AppTheme.textLight)),
-                    Container(decoration: const BoxDecoration(gradient: AppTheme.heroGradient)),
-                    Positioned(
-                      bottom: 12, left: 12, right: 12,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(item.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14), maxLines: 2, overflow: TextOverflow.ellipsis),
-                          if (item.location != null)
-                            Row(children: [
-                              const Icon(Icons.location_on, size: 12, color: Colors.white70),
-                              const SizedBox(width: 4),
-                              Expanded(child: Text(item.location!, style: const TextStyle(color: Colors.white70, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                            ]),
-                        ],
-                      ),
+                        // ── Destination Cards (Overlapping) ──
+                        Transform.translate(
+                          offset: const Offset(0, -88),
+                          child: _buildDestinationSection(contentProv),
+                        ),
+
+                        // ── Event Section ──
+                        Transform.translate(
+                          offset: const Offset(0, -60),
+                          child: _buildEventSection(eventProv),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(20, topPadding + 20, 20, 130),
+      decoration: BoxDecoration(
+        gradient: AppTheme.blueHeaderGradient,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Selamat Datang di',
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withValues(alpha: 0.8),
+            ),
+          ),
+          Text(
+            'BLUD Pariwisata',
+            style: GoogleFonts.inter(
+              fontSize: 30,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 20),
+          
+          // Search Bar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.search_rounded, color: Color(0xFF9CA3AF), size: 22),
+                const SizedBox(width: 12),
+                Text(
+                  'Cari destinasi wisata...',
+                  style: GoogleFonts.inter(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF9CA3AF),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 32),
+          Text(
+            'Destinasi Unggulan',
+            style: GoogleFonts.inter(
+              fontSize: 21.5,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDestinationSection(ContentProvider prov) {
+    if (prov.isLoading) {
+      return SizedBox(
+        height: 255,
+        child: ListView.separated(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          scrollDirection: Axis.horizontal,
+          itemCount: 3,
+          separatorBuilder: (_, __) => const SizedBox(width: 16),
+          itemBuilder: (_, __) => const Skeleton(width: 200, height: 255, borderRadius: BorderRadius.all(Radius.circular(20))),
+        ),
+      );
+    }
+
+    if (prov.featuredContents.isEmpty) {
+      return const SizedBox(
+        height: 255,
+        child: Center(child: Text('Tidak ada destinasi unggulan')),
+      );
+    }
+
+    return SizedBox(
+      height: 255,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: prov.featuredContents.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 16),
+        itemBuilder: (context, index) {
+          final dest = prov.featuredContents[index];
+          return _DestinationCard(
+            title: dest.name,
+            location: dest.location ?? 'Purwokerto',
+            imageUrl: dest.imageUrl ?? '',
+            slug: dest.slug,
           );
         },
       ),
     );
   }
 
-  Widget _buildNewsList(List<NewsModel> news) {
-    if (news.isEmpty) {
-      return const Padding(padding: EdgeInsets.all(24), child: Center(child: Text('Belum ada berita')));
-    }
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingLg),
-      itemCount: news.length > 5 ? 5 : news.length,
-      itemBuilder: (context, index) {
-        final item = news[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            onTap: () {
-              if (item.source != null && item.source!.isNotEmpty) {
-                launchUrl(Uri.parse(item.source!), mode: LaunchMode.externalApplication);
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
+  Widget _buildEventSection(EventProvider prov) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                'Jadwal Event Terkini',
+                style: GoogleFonts.inter(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.pureBlack,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              GestureDetector(
+                onTap: widget.onSeeAllSchedule,
+                child: Text(
+                  'Lihat semua',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.deepPurple,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          if (prov.isLoading)
+            Column(
+              children: List.generate(3, (index) => Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: Row(
+                  children: [
+                    const Skeleton(width: 80, height: 80, borderRadius: BorderRadius.all(Radius.circular(16))),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Skeleton(width: double.infinity, height: 20),
+                          SizedBox(height: 8),
+                          Skeleton(width: 150, height: 16),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+            )
+          else if (prov.events.isEmpty)
+            const Center(child: Text('Belum ada jadwal event terbaru'))
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: prov.events.length > 3 ? 3 : prov.events.length, // Tampilkan 3 saja di home
+              separatorBuilder: (_, __) => const SizedBox(height: 14),
+              itemBuilder: (context, index) {
+                final event = prov.events[index];
+                return _EventCard(
+                  title: event.nameEvent,
+                  location: event.location ?? 'Taman Mas Kemambang',
+                  date: event.startDate,
+                  iconColor: index % 2 == 0 ? const Color(0xFF1A9AEF) : null,
+                  gradient: index % 2 != 0 ? const LinearGradient(
+                    colors: [Color(0xFF5D8FE8), Color(0xFF604DEC)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ) : null,
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+
+class _DestinationCard extends StatelessWidget {
+  final String title;
+  final String location;
+  final String imageUrl;
+  final String slug;
+
+  const _DestinationCard({
+    required this.title,
+    required this.location,
+    required this.imageUrl,
+    required this.slug,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DestinationDetailScreen(slug: slug),
+          ),
+        );
+      },
+      child: Container(
+      width: 185,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+            spreadRadius: -6,
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: CachedNetworkImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  color: Colors.grey.shade200,
+                  child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: Colors.grey.shade300,
+                  child: const Icon(Icons.image_not_supported_rounded, color: Colors.white),
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withValues(alpha: 0.8),
+                      Colors.black.withValues(alpha: 0.2),
+                      Colors.transparent,
+                    ],
+                    begin: Alignment.bottomCenter,
+                    end: const Alignment(0, -0.2),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 16,
+              left: 16,
+              right: 16,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                    child: SizedBox(
-                      width: 80, height: 80,
-                      child: item.imageUrl != null
-                          ? CachedNetworkImage(imageUrl: item.imageUrl!, fit: BoxFit.cover)
-                          : Container(color: AppTheme.shimmerBase, child: const Icon(Icons.newspaper, color: AppTheme.textLight)),
+                  Text(
+                    title,
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      height: 1.1,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(item.title, style: Theme.of(context).textTheme.titleMedium, maxLines: 2, overflow: TextOverflow.ellipsis),
-                        const SizedBox(height: 4),
-                        if (item.uploadTime != null)
-                          Text(item.uploadTime!, style: Theme.of(context).textTheme.bodySmall),
-                      ],
-                    ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on_rounded, color: Colors.white70, size: 14),
+                      const SizedBox(width: 4),
+                      Text(
+                        location,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-          ),
-        );
-      },
-    );
-  }
+          ],
+        ),
+      ),
+    ),
+  );
 }
+}
+
+class _EventCard extends StatelessWidget {
+  final String title;
+  final String location;
+  final String date;
+  final Color? iconColor;
+  final Gradient? gradient;
+
+  const _EventCard({
+    required this.title,
+    required this.location,
+    required this.date,
+    this.iconColor,
+    this.gradient,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () {
+        // Option: Navigate to schedule detail if available
+      },
+      child: Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF9FAFB), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 15,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: iconColor,
+              gradient: gradient,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: (iconColor ?? Colors.blue).withValues(alpha: 0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.calendar_today_rounded, color: Colors.white, size: 26),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.inter(
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF111111),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  location,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF444444),
+                  ),
+                ),
+                Text(
+                  date,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF444444),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+}
+
