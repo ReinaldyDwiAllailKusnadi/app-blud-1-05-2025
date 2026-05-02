@@ -15,6 +15,12 @@ class DestinationListScreen extends StatefulWidget {
 }
 
 class _DestinationListScreenState extends State<DestinationListScreen> {
+  String _shortLocation(String location) {
+    if (location.trim().isEmpty) return '-';
+    // Take first 2 parts of address for concise display
+    return location.split(',').take(2).join(',').trim();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -75,7 +81,7 @@ class _DestinationListScreenState extends State<DestinationListScreen> {
                           return _DestinationListCard(
                             title: dest.name,
                             description: dest.description ?? '',
-                            location: dest.location ?? 'Purwokerto',
+                            location: _shortLocation(dest.location ?? 'Purwokerto'),
                             imageUrl: dest.imageUrl ?? '',
                             slug: dest.slug,
                           );
@@ -219,6 +225,8 @@ class _DestinationListCard extends StatelessWidget {
                       color: const Color(0xFF111111),
                       height: 1.1,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -229,18 +237,24 @@ class _DestinationListCard extends StatelessWidget {
                       color: const Color(0xFF555555),
                       height: 1.3,
                     ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 14),
                   Row(
                     children: [
                       const Icon(Icons.location_on_rounded, color: Color(0xFF6B7280), size: 18),
                       const SizedBox(width: 6),
-                      Text(
-                        location,
-                        style: GoogleFonts.inter(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF555555),
+                      Expanded(
+                        child: Text(
+                          location,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF555555),
+                          ),
                         ),
                       ),
                     ],

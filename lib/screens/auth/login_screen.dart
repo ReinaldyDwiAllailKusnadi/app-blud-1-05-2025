@@ -196,18 +196,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
 
                         // Forgot Password
-                        GestureDetector(
+                        AuthHoverLink(
+                          text: 'Lupa password?',
                           onTap: () {
-                            // TODO: Navigate to forgot password
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Fitur lupa password belum tersedia'),
+                              ),
+                            );
                           },
-                          child: Text(
-                            'Lupa password?',
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AuthColors.signUpBlue,
-                            ),
-                          ),
                         ),
                       ],
                     ),
@@ -239,7 +236,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             letterSpacing: -0.02 * 14.5,
                           ),
                         ),
-                        GestureDetector(
+                        AuthHoverLink(
+                          text: 'Daftar di sini',
                           onTap: () {
                             Navigator.push(
                               context,
@@ -248,15 +246,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             );
                           },
-                          child: Text(
-                            'Daftar di sini',
-                            style: GoogleFonts.inter(
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.w600,
-                              color: AuthColors.signUpBlue,
-                              letterSpacing: -0.02 * 14.5,
-                            ),
-                          ),
                         ),
                       ],
                     ),

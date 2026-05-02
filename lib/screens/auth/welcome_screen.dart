@@ -98,7 +98,7 @@ class WelcomeScreen extends StatelessWidget {
                 // ── Google Button ──
                 Consumer<AuthProvider>(
                   builder: (context, auth, child) {
-                    return GestureDetector(
+                    return Pressable(
                       onTap: auth.isLoading ? null : () => _handleGoogleSignIn(context),
                       child: Container(
                         width: double.infinity,
@@ -154,7 +154,8 @@ class WelcomeScreen extends StatelessWidget {
                         letterSpacing: -0.02 * 14.5,
                       ),
                     ),
-                    GestureDetector(
+                    AuthHoverLink(
+                      text: 'Sign up',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -163,15 +164,6 @@ class WelcomeScreen extends StatelessWidget {
                           ),
                         );
                       },
-                      child: Text(
-                        'Sign up',
-                        style: GoogleFonts.inter(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w600,
-                          color: AuthColors.signUpBlue,
-                          letterSpacing: -0.02 * 14.5,
-                        ),
-                      ),
                     ),
                   ],
                 ),

@@ -177,49 +177,28 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
           ),
           const SizedBox(height: 24),
 
-          // Info Row (3 Columns)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          // Info Section (Responsive Wrap)
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
             children: [
-              Expanded(
-                child: _InfoItem(
-                  icon: Icons.location_on_rounded,
-                  title: dest.location ?? 'Purwokerto,',
-                  value: 'Banyumas',
-                ),
+              _buildInfoItem(
+                icon: Icons.location_on_rounded,
+                label: 'Lokasi',
+                value: dest.location ?? 'Purwokerto, Banyumas',
+                width: (MediaQuery.of(context).size.width - 60) / 2, // 2 items per row if space allows
               ),
-              Expanded(
-                child: _InfoItem(
-                  icon: Icons.access_time_filled_rounded,
-                  title: 'Buka',
-                  value: '${dest.openTime ?? '08:00'} - ${dest.closeTime ?? '22:00'} WIB',
-                ),
+              _buildInfoItem(
+                icon: Icons.access_time_filled_rounded,
+                label: 'Buka',
+                value: '${dest.openTime ?? '08:00'} - ${dest.closeTime ?? '22:00'} WIB',
+                width: (MediaQuery.of(context).size.width - 60) / 2,
               ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.payments_rounded, color: Color(0xFF3B82F6), size: 22),
-                        SizedBox(width: 8),
-                        Text('Mulai dari', style: TextStyle(fontSize: 14.5, color: Color(0xFF1F2937))),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 30),
-                      child: Text(
-                        'Rp ${dest.priceWeekday ?? '25.000'}',
-                        style: GoogleFonts.inter(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              _buildInfoItem(
+                icon: Icons.payments_rounded,
+                label: 'Mulai dari',
+                value: 'Rp ${dest.priceWeekday ?? '25.000'}',
+                width: (MediaQuery.of(context).size.width - 60) / 2,
               ),
             ],
           ),
@@ -250,10 +229,112 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
           const SizedBox(height: 32),
           
           // Map Preview
-          const _MapPreview(),
+          _MapPreview(
+            onTap: () => _openMap(dest),
+          ),
         ],
       ),
     );
+  }
+
+  Widget _buildInfoItem({
+    required IconData icon,
+    required String label,
+    required String value,
+    double? width,
+  }) {
+    return Container(
+      width: width,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: const Color(0xFF3B82F6)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: const Color(0xFF64748B),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1E293B),
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String? _extractIframeSrc(String? iframe) {
+    if (iframe == null || iframe.trim().isEmpty) return null;
+
+    final regex = RegExp(r'src="([^"]+)"');
+    final match = regex.firstMatch(iframe);
+
+    if (match != null && match.groupCount >= 1) {
+      return match.group(1);
+    }
+
+    return iframe;
+  }
+
+  Future<void> _openMap(ContentModel destination) async {
+    final embedUrl = _extractIframeSrc(destination.locationEmbed);
+
+    final fallbackQuery = Uri.encodeComponent(
+      '${destination.name} ${destination.location}',
+    );
+
+    final fallbackUrl = 'https://www.google.com/maps/search/?api=1&query=$fallbackQuery';
+
+    final url = (embedUrl != null && embedUrl.isNotEmpty && embedUrl.startsWith('http'))
+        ? embedUrl
+        : fallbackUrl;
+
+    final uri = Uri.parse(url);
+
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        final fallbackUri = Uri.parse(fallbackUrl);
+        await launchUrl(
+          fallbackUri,
+          mode: LaunchMode.externalApplication,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tidak dapat membuka peta')),
+        );
+      }
+    }
   }
 }
 
@@ -286,97 +367,67 @@ class _TopCircleButton extends StatelessWidget {
   }
 }
 
-class _InfoItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String value;
-
-  const _InfoItem({required this.icon, required this.title, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, color: const Color(0xFF3B82F6), size: 22),
-            const SizedBox(width: 8),
-            Text(title, style: const TextStyle(fontSize: 14.5, color: Color(0xFF1F2937))),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Padding(
-          padding: const EdgeInsets.only(left: 30),
-          child: Text(
-            value,
-            style: GoogleFonts.inter(
-              fontSize: 14.5,
-              fontWeight: FontWeight.w400,
-              color: const Color(0xFF1F2937),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 class _MapPreview extends StatelessWidget {
-  const _MapPreview();
+  final VoidCallback onTap;
+  const _MapPreview({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: 150,
-      decoration: BoxDecoration(
-        color: const Color(0xFFEAEAEA),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Stack(
-        children: [
-          // Minimalist Map Background
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0.4,
-              child: Center(
-                child: Icon(Icons.location_on_rounded, color: Colors.blue.shade700, size: 40),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        height: 150,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Stack(
+          children: [
+            // Minimalist Map Background
+            Positioned.fill(
+              child: Opacity(
+                opacity: 0.15,
+                child: Center(
+                  child: Icon(Icons.map_rounded, color: Colors.blue.shade700, size: 80),
+                ),
               ),
             ),
-          ),
-          Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(999),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.map_rounded, size: 18, color: Colors.black),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Lihat di Peta',
-                    style: GoogleFonts.inter(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black,
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(999),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.location_on_rounded, size: 20, color: Color(0xFF3B82F6)),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Lihat di Peta',
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1E293B),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

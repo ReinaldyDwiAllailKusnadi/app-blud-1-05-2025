@@ -5,6 +5,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../providers/content_provider.dart';
 import '../../providers/event_provider.dart';
 import '../wisata/destination_detail_screen.dart';
+import '../../providers/auth_provider.dart';
+import '../auth/login_screen.dart';
+import '../booking/submission_history_screen.dart';
 import '../../core/widgets/pressable.dart';
 import '../../core/widgets/skeleton.dart';
 import '../../core/theme/app_theme.dart';
@@ -26,6 +29,11 @@ class _HomeScreenState extends State<HomeScreen> {
       context.read<ContentProvider>().fetchHomeData();
       context.read<EventProvider>().fetchJadwal();
     });
+  }
+
+  String _shortLocation(String value) {
+    if (value.isEmpty) return '-';
+    return value.split(',').first.trim();
   }
 
   @override
@@ -90,22 +98,99 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Selamat Datang di',
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: Colors.white.withValues(alpha: 0.8),
-            ),
-          ),
-          Text(
-            'BLUD Pariwisata',
-            style: GoogleFonts.inter(
-              fontSize: 30,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              letterSpacing: -0.5,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Selamat Datang di',
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white.withValues(alpha: 0.8),
+                    ),
+                  ),
+                  Text(
+                    'BLUD Pariwisata',
+                    style: GoogleFonts.inter(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ],
+              ),
+              // Menu Button (Popup)
+              PopupMenuButton<String>(
+                color: Colors.white,
+                elevation: 12,
+                shadowColor: Colors.black.withValues(alpha: 0.3),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                offset: const Offset(0, 52),
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.menu_rounded,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+                onSelected: (value) {
+                  if (value == 'history') {
+                    final auth = context.read<AuthProvider>();
+                    if (!auth.isAuthenticated) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      );
+                      return;
+                    }
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SubmissionHistoryScreen(),
+                      ),
+                    );
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem<String>(
+                    value: 'history',
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.history_rounded, size: 20, color: Color(0xFF3B82F6)),
+                        ),
+                        const SizedBox(width: 14),
+                        Text(
+                          'Riwayat Pengajuan',
+                          style: GoogleFonts.inter(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF1E293B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
           const SizedBox(height: 20),
           
@@ -186,7 +271,7 @@ class _HomeScreenState extends State<HomeScreen> {
           final dest = prov.featuredContents[index];
           return _DestinationCard(
             title: dest.name,
-            location: dest.location ?? 'Purwokerto',
+            location: _shortLocation(dest.location ?? 'Purwokerto'),
             imageUrl: dest.imageUrl ?? '',
             slug: dest.slug,
           );
@@ -365,18 +450,24 @@ class _DestinationCard extends StatelessWidget {
                       color: Colors.white,
                       height: 1.1,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 6),
                   Row(
                     children: [
                       const Icon(Icons.location_on_rounded, color: Colors.white70, size: 14),
                       const SizedBox(width: 4),
-                      Text(
-                        location,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white.withValues(alpha: 0.9),
+                      Expanded(
+                        child: Text(
+                          location,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
                         ),
                       ),
                     ],

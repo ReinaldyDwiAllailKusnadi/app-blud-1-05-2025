@@ -70,6 +70,58 @@ class LogoBlud extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════
+// Pressable Interaction Wrapper
+// ═══════════════════════════════════════════════════════════
+class Pressable extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+
+  const Pressable({
+    super.key,
+    required this.child,
+    required this.onTap,
+  });
+
+  @override
+  State<Pressable> createState() => _PressableState();
+}
+
+class _PressableState extends State<Pressable> {
+  bool _isHovered = false;
+  bool _isPressed = false;
+
+  double get _scale {
+    if (_isPressed) return 0.97;
+    if (_isHovered) return 1.015;
+    return 1.0;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: widget.onTap != null ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() {
+        _isHovered = false;
+        _isPressed = false;
+      }),
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapUp: (_) => setState(() => _isPressed = false),
+        onTapCancel: () => setState(() => _isPressed = false),
+        onTap: widget.onTap,
+        child: AnimatedScale(
+          scale: _scale,
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOut,
+          child: widget.child,
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
 // Gradient Button (Reusable)
 // ═══════════════════════════════════════════════════════════
 class GradientButton extends StatelessWidget {
@@ -86,7 +138,7 @@ class GradientButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return Pressable(
       onTap: onTap,
       child: Container(
         width: double.infinity,
@@ -119,6 +171,68 @@ class GradientButton extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// Auth Hover Link (Reusable for Register, Login, Forgot Pwd)
+// ═══════════════════════════════════════════════════════════
+class AuthHoverLink extends StatefulWidget {
+  final String text;
+  final VoidCallback onTap;
+
+  const AuthHoverLink({
+    super.key,
+    required this.text,
+    required this.onTap,
+  });
+
+  @override
+  State<AuthHoverLink> createState() => _AuthHoverLinkState();
+}
+
+class _AuthHoverLinkState extends State<AuthHoverLink> {
+  bool _isHovered = false;
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _isHovered
+        ? const Color(0xFF1565D8)
+        : AuthColors.signUpBlue;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() {
+        _isHovered = false;
+        _isPressed = false;
+      }),
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapUp: (_) => setState(() => _isPressed = false),
+        onTapCancel: () => setState(() => _isPressed = false),
+        onTap: widget.onTap,
+        child: AnimatedScale(
+          scale: _isPressed ? 0.96 : 1.0,
+          duration: const Duration(milliseconds: 100),
+          curve: Curves.easeOut,
+          child: AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 120),
+            curve: Curves.easeOut,
+            style: GoogleFonts.inter(
+              color: color,
+              fontSize: 14.5,
+              fontWeight: FontWeight.w600,
+              decoration: _isHovered ? TextDecoration.underline : TextDecoration.none,
+              decorationColor: color,
+              letterSpacing: -0.02 * 14.5,
+            ),
+            child: Text(widget.text),
+          ),
         ),
       ),
     );

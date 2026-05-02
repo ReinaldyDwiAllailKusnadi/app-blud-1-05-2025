@@ -22,13 +22,24 @@ class EventModel {
   factory EventModel.fromJson(Map<String, dynamic> json) {
     return EventModel(
       id: json['id'] ?? 0,
-      nameEvent: json['name_event'] ?? '',
-      startDate: json['start_date'] ?? '',
-      endDate: json['end_date'] ?? '',
-      location: json['location'],
+      nameEvent: json['name_event'] ?? json['title'] ?? json['name'] ?? '-',
+      startDate: json['start_date'] ?? '-',
+      endDate: json['end_date'] ?? '-',
+      location: json['location'] ?? '-',
       vendor: json['vendor'],
       file: json['file'],
       fileUrl: json['file_url'],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name_event': nameEvent,
+    'start_date': startDate,
+    'end_date': endDate,
+    'location': location,
+    'vendor': vendor,
+    'file': file,
+    'file_url': fileUrl,
+  };
 }

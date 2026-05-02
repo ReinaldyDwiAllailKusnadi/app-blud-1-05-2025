@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../providers/auth_provider.dart';
-import '../auth/login_screen.dart';
+import '../auth/welcome_screen.dart';
 import '../../core/widgets/pressable.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -218,34 +218,36 @@ class ProfileScreen extends StatelessWidget {
               Expanded(
                 child: _ActionPillButton(
                   label: 'Keluar',
-                  onPressed: () {
-                    showDialog(
+                  onPressed: () async {
+                    final confirm = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
                         title: const Text('Keluar'),
-                        content: const Text('Apakah Anda yakin ingin keluar?'),
+                        content: const Text('Apakah Anda yakin ingin keluar dari akun?'),
                         actions: [
                           TextButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () => Navigator.pop(context, false),
                             child: const Text('Batal'),
                           ),
                           TextButton(
-                            onPressed: () async {
-                              Navigator.pop(context);
-                              await authProv.logout();
-                              if (context.mounted) {
-                                Navigator.pushAndRemoveUntil(
-                                  context, 
-                                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                                  (route) => false,
-                                );
-                              }
-                            },
+                            onPressed: () => Navigator.pop(context, true),
                             child: const Text('Keluar', style: TextStyle(color: Colors.red)),
                           ),
                         ],
                       ),
                     );
+
+                    if (confirm != true || !context.mounted) return;
+
+                    await authProv.logout();
+
+                    if (context.mounted) {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+                        (route) => false,
+                      );
+                    }
                   },
                   isDanger: true,
                 ),

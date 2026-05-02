@@ -11,20 +11,40 @@ class ContentProvider extends BaseProvider {
   List<ContentModel> _featuredContents = [];
 
   ContentProvider(this._contentService) {
-    _loadFromCache();
+    _init();
+  }
+
+  Future<void> _init() async {
+    try {
+      _loadFromCache();
+    } catch (e) {
+      // Abaikan error cache agar aplikasi tetap jalan
+    }
   }
 
   void _loadFromCache() {
-    final cachedHome = CacheService.get('home_data');
-    if (cachedHome != null) {
-      final List data = cachedHome['contents'] ?? [];
-      _featuredContents = data.map((e) => ContentModel.fromJson(e)).toList();
-    }
+    try {
+      final cachedHome = CacheService.get('home_data');
+      if (cachedHome != null && cachedHome is Map) {
+        final List data = (cachedHome['contents'] as List?) ?? [];
+        _featuredContents = data
+            .whereType<Map>()
+            .map((e) => ContentModel.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+      }
 
-    final cachedWisata = CacheService.get('wisata_data');
-    if (cachedWisata != null) {
-      final List data = cachedWisata ?? [];
-      _contents = data.map((e) => ContentModel.fromJson(e)).toList();
+      final cachedWisata = CacheService.get('wisata_data');
+      if (cachedWisata != null) {
+        final List data = (cachedWisata as List?) ?? [];
+        _contents = data
+            .whereType<Map>()
+            .map((e) => ContentModel.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+      }
+    } catch (e) {
+      // Jika cache corrupt, hapus atau abaikan
+      CacheService.save('home_data', null);
+      CacheService.save('wisata_data', null);
     }
   }
 
@@ -37,10 +57,21 @@ class ContentProvider extends BaseProvider {
 
     try {
       final response = await _contentService.getHomeData();
-      final List data = response.data['data']['contents'] ?? [];
-      _featuredContents = data.map((e) => ContentModel.fromJson(e)).toList();
+      final data = response.data;
+      List rawList = [];
+
+      if (data is Map && data['data'] is Map && data['data']['contents'] is List) {
+        rawList = data['data']['contents'];
+      }
+
+      _featuredContents = rawList
+          .whereType<Map>()
+          .map((e) => ContentModel.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
       
-      await CacheService.save('home_data', response.data['data']);
+      if (data is Map && data['data'] != null) {
+        await CacheService.save('home_data', data['data']);
+      }
     } catch (e) {
       handleDioError(e, defaultMessage: 'Gagal memuat data beranda');
       if (_featuredContents.isEmpty) _loadFromCache();
@@ -55,10 +86,21 @@ class ContentProvider extends BaseProvider {
 
     try {
       final response = await _contentService.getAllWisata();
-      final List data = response.data['data'] ?? [];
-      _contents = data.map((e) => ContentModel.fromJson(e)).toList();
+      final data = response.data;
+      List rawList = [];
 
-      await CacheService.save('wisata_data', response.data['data']);
+      if (data is Map && data['data'] is List) {
+        rawList = data['data'];
+      }
+
+      _contents = rawList
+          .whereType<Map>()
+          .map((e) => ContentModel.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+
+      if (data is Map && data['data'] != null) {
+        await CacheService.save('wisata_data', data['data']);
+      }
     } catch (e) {
       handleDioError(e, defaultMessage: 'Gagal memuat daftar wisata');
       if (_contents.isEmpty) _loadFromCache();
@@ -80,7 +122,11 @@ class ContentProvider extends BaseProvider {
 
     try {
       final response = await _contentService.getWisataDetail(slug);
-      return ContentModel.fromJson(response.data['data']);
+      final data = response.data['data'];
+      if (data is Map) {
+        return ContentModel.fromJson(Map<String, dynamic>.from(data));
+      }
+      return null;
     } catch (e) {
       handleDioError(e, defaultMessage: 'Gagal memuat detail wisata');
       return null;

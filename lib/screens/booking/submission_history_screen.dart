@@ -28,67 +28,132 @@ class _SubmissionHistoryScreenState extends State<SubmissionHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
+      appBar: AppBar(
+        title: const Text('Riwayat Pengajuan'),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+      ),
+      body: _buildBody(auth),
+    );
+  }
+
+  Widget _buildBody(AuthProvider auth) {
     if (!auth.isLoggedIn) {
-      return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-        const Icon(Icons.lock_outline, size: 64, color: AppTheme.textLight),
-        const SizedBox(height: 16),
-        const Text('Silakan login untuk melihat riwayat'),
-        const SizedBox(height: 16),
-        ElevatedButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen())), child: const Text('Login')),
-      ]));
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.lock_outline, size: 64, color: AppTheme.textLight),
+            const SizedBox(height: 16),
+            const Text('Silakan login untuk melihat riwayat'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+              ),
+              child: const Text('Login'),
+            ),
+          ],
+        ),
+      );
     }
 
     return Consumer<SubmissionProvider>(builder: (context, data, _) {
       if (data.isLoading) return const Center(child: CircularProgressIndicator());
-      if (data.submissions.isEmpty) {
-        return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Icon(Icons.inbox_outlined, size: 64, color: AppTheme.textLight),
-          const SizedBox(height: 16),
-          const Text('Belum ada pengajuan'),
-        ]));
+      if (data.history.isEmpty) {
+        return Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.inbox_outlined, size: 64, color: AppTheme.textLight),
+              const SizedBox(height: 16),
+              const Text('Belum ada pengajuan'),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => data.fetchHistory(),
+                child: const Text('Refresh'),
+              ),
+            ],
+          ),
+        );
       }
       return RefreshIndicator(
         onRefresh: () => data.fetchHistory(),
         child: ListView.builder(
           padding: const EdgeInsets.all(AppTheme.spacingMd),
-          itemCount: data.submissions.length,
+          itemCount: data.history.length,
           itemBuilder: (context, index) {
-            final item = data.submissions[index];
+            final item = data.history[index];
             return Card(
               margin: const EdgeInsets.only(bottom: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Row(children: [
-                    Expanded(child: Text(item.nameEvent, style: Theme.of(context).textTheme.titleMedium)),
-                    _statusBadge(item.status),
-                  ]),
-                  const SizedBox(height: 10),
-                  _infoRow(Icons.business, item.vendor),
-                  _infoRow(Icons.location_on, item.location),
-                  _infoRow(Icons.date_range, '${item.startDate} - ${item.endDate}'),
-                  if (item.applyDate != null) _infoRow(Icons.access_time, 'Diajukan: ${item.applyDate}'),
-                  if (item.notes != null && item.notes!.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: item.status == 'rejected' ? AppTheme.errorColor.withValues(alpha: 0.08) : AppTheme.primaryColor.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item.nameEvent,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        _statusBadge(item.status),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    _infoRow(Icons.business_rounded, item.vendor),
+                    _infoRow(Icons.location_on_rounded, item.location),
+                    _infoRow(Icons.calendar_month_rounded, '${item.startDate} - ${item.endDate}'),
+                    if (item.applyDate != null) _infoRow(Icons.access_time_rounded, 'Diajukan: ${item.applyDate}'),
+                    if (item.notes != null && item.notes!.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: item.status == 'rejected' ? Colors.red.shade50 : Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Catatan Admin: ${item.notes}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: item.status == 'rejected' ? Colors.red.shade800 : Colors.blue.shade800,
+                          ),
+                        ),
                       ),
-                      child: Text('Catatan: ${item.notes}', style: const TextStyle(fontSize: 13)),
+                    ],
+                    // Document links
+                    const SizedBox(height: 12),
+                    const Divider(height: 24),
+                    const Text(
+                      'Dokumen Pendukung:',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        if (item.fileUrl != null) _docChip('Proposal', item.fileUrl!),
+                        if (item.ktpUrl != null) _docChip('KTP', item.ktpUrl!),
+                        if (item.applLetterUrl != null) _docChip('Surat Pengajuan', item.applLetterUrl!),
+                        if (item.actvLetterUrl != null) _docChip('Surat Kegiatan', item.actvLetterUrl!),
+                      ],
                     ),
                   ],
-                  // Document links
-                  const SizedBox(height: 10),
-                  Wrap(spacing: 6, runSpacing: 6, children: [
-                    if (item.fileUrl != null) _docChip('Proposal', item.fileUrl!),
-                    if (item.ktpUrl != null) _docChip('KTP', item.ktpUrl!),
-                    if (item.applLetterUrl != null) _docChip('Surat Pengajuan', item.applLetterUrl!),
-                    if (item.actvLetterUrl != null) _docChip('Surat Kegiatan', item.actvLetterUrl!),
-                  ]),
-                ]),
+                ),
               ),
             );
           },

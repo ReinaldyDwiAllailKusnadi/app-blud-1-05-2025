@@ -68,13 +68,15 @@ class AuthProvider extends BaseProvider {
   }
 
   Future<void> logout() async {
+    setLoading(true);
     try {
       await _authService.logout();
     } catch (e) {
-      // Ignore logout error
+      // Abaikan error API logout agar logout lokal tetap berhasil
     } finally {
       await _dioClient.deleteToken();
       _user = null;
+      setLoading(false);
       notifyListeners();
     }
   }

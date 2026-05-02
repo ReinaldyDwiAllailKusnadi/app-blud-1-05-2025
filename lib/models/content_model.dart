@@ -52,4 +52,22 @@ class ContentModel {
       whatsapp: json['whatsapp']?.toString(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'slug': slug,
+    'description': description,
+    'price_weekday': priceWeekday,
+    'price_weekend': priceWeekend,
+    'open_time': openTime,
+    'close_time': closeTime,
+    'location': location,
+    'location_embed': locationEmbed,
+    'image': image,
+    'image_url': imageUrl,
+    'instagram': instagram,
+    'tiktok': tiktok,
+    'whatsapp': whatsapp,
+  };
 }

@@ -208,7 +208,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               color: const Color(0xFF1E293B),
                             ),
                           ),
-                          GestureDetector(
+                          AuthHoverLink(
+                            text: 'Login di sini',
                             onTap: () {
                               Navigator.pushReplacement(
                                 context,
@@ -217,14 +218,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
                               );
                             },
-                            child: Text(
-                              'Login di sini',
-                              style: GoogleFonts.inter(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF3B82F6),
-                              ),
-                            ),
                           ),
                         ],
                       ),

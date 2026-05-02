@@ -5,6 +5,8 @@ import '../../providers/event_provider.dart';
 import '../booking/submission_form_screen.dart';
 import '../../core/widgets/pressable.dart';
 import '../../core/widgets/skeleton.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
@@ -17,9 +19,20 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   @override
   void initState() {
     super.initState();
+    initializeDateFormatting('id_ID', null);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<EventProvider>().fetchJadwal();
     });
+  }
+
+  String _formatIndonesianDate(String? dateStr) {
+    if (dateStr == null || dateStr == '-' || dateStr.isEmpty) return 'Tanggal TBC';
+    try {
+      final date = DateTime.parse(dateStr);
+      return DateFormat('EEEE, d MMM', 'id_ID').format(date);
+    } catch (e) {
+      return dateStr;
+    }
   }
 
   @override
@@ -76,7 +89,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                       final event = prov.events[index];
                                       return _FilledScheduleCard(
                                         title: event.nameEvent,
-                                        subtitle: '${event.location ?? "Banyumas"}, ${event.startDate}',
+                                        subtitle: '${event.location} - ${_formatIndonesianDate(event.startDate)}',
                                       );
                                     },
                                   ),
