@@ -38,7 +38,7 @@ Future<void> main() async {
           create: (_) => EventProvider(eventService),
         ),
         ChangeNotifierProvider(
-          create: (_) => SubmissionProvider(submissionService),
+          create: (_) => SubmissionProvider(submissionService, dioClient),
         ),
       ],
       child: const BludApp(),

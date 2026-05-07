@@ -101,4 +101,32 @@ class AuthProvider extends BaseProvider {
     setError('Login Google belum tersedia');
     return false;
   }
+
+  Future<bool> updateProfile({
+    required String name,
+    required String username,
+    required String phone,
+    required String email,
+  }) async {
+    setLoading(true);
+    setError(null);
+    try {
+      final response = await _authService.updateProfile(
+        name: name,
+        username: username,
+        phone: phone,
+        email: email,
+      );
+
+      final userData = response.data['data'];
+      _user = UserModel.fromJson(userData);
+      
+      setLoading(false);
+      return true;
+    } catch (e) {
+      handleDioError(e, defaultMessage: 'Gagal memperbarui profil. Silakan coba lagi.');
+      setLoading(false);
+      return false;
+    }
+  }
 }

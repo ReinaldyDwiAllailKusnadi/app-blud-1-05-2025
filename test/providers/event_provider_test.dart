@@ -45,7 +45,7 @@ void main() {
 
       // Assert
       expect(eventProvider.events.length, 1);
-      expect(eventProvider.events[0].name, 'Event 1');
+      expect(eventProvider.events[0].nameEvent, 'Event 1');
     });
   });
 }

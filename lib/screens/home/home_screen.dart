@@ -36,6 +36,30 @@ class _HomeScreenState extends State<HomeScreen> {
     return value.split(',').first.trim();
   }
 
+  String _formatIndonesianDate(String? date) {
+    if (date == null || date.isEmpty || date == '-') return 'Tanggal belum tersedia';
+
+    try {
+      final parsed = DateTime.tryParse(date);
+      if (parsed == null) return date;
+
+      const months = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      ];
+
+      return '${parsed.day} ${months[parsed.month - 1]} ${parsed.year}';
+    } catch (e) {
+      return date;
+    }
+  }
+
+  String _formatDateRange(String? start, String? end) {
+    final startText = _formatIndonesianDate(start);
+    if (end == null || end.isEmpty || end == '-' || end == start) return startText;
+    return '$startText - ${_formatIndonesianDate(end)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -312,7 +336,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          if (prov.isLoading)
+          if (prov.isLoading && prov.events.isEmpty)
             Column(
               children: List.generate(3, (index) => Padding(
                 padding: const EdgeInsets.only(bottom: 14),
@@ -335,19 +359,22 @@ class _HomeScreenState extends State<HomeScreen> {
               )),
             )
           else if (prov.events.isEmpty)
-            const Center(child: Text('Belum ada jadwal event terbaru'))
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 30),
+              child: Center(child: Text('Belum ada jadwal event terbaru')),
+            )
           else
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: prov.events.length > 3 ? 3 : prov.events.length, // Tampilkan 3 saja di home
+              itemCount: prov.events.length > 2 ? 2 : prov.events.length,
               separatorBuilder: (_, __) => const SizedBox(height: 14),
               itemBuilder: (context, index) {
                 final event = prov.events[index];
                 return _EventCard(
                   title: event.nameEvent,
-                  location: event.location ?? 'Taman Mas Kemambang',
-                  date: event.startDate,
+                  location: event.location ?? '-',
+                  date: _formatDateRange(event.startDate, event.endDate),
                   iconColor: index % 2 == 0 ? const Color(0xFF1A9AEF) : null,
                   gradient: index % 2 != 0 ? const LinearGradient(
                     colors: [Color(0xFF5D8FE8), Color(0xFF604DEC)],
@@ -550,6 +577,8 @@ class _EventCard extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF111111),
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -559,6 +588,8 @@ class _EventCard extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                     color: const Color(0xFF444444),
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   date,

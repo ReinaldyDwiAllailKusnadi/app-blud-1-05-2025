@@ -5,8 +5,8 @@ import '../../providers/event_provider.dart';
 import '../booking/submission_form_screen.dart';
 import '../../core/widgets/pressable.dart';
 import '../../core/widgets/skeleton.dart';
-import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
@@ -25,14 +25,28 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     });
   }
 
-  String _formatIndonesianDate(String? dateStr) {
-    if (dateStr == null || dateStr == '-' || dateStr.isEmpty) return 'Tanggal TBC';
+  String _formatIndonesianDate(String? date) {
+    if (date == null || date.isEmpty || date == '-') return 'Tanggal belum tersedia';
+
     try {
-      final date = DateTime.parse(dateStr);
-      return DateFormat('EEEE, d MMM', 'id_ID').format(date);
+      final parsed = DateTime.tryParse(date);
+      if (parsed == null) return date;
+
+      const months = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      ];
+
+      return '${parsed.day} ${months[parsed.month - 1]} ${parsed.year}';
     } catch (e) {
-      return dateStr;
+      return date;
     }
+  }
+
+  String _formatDateRange(String? start, String? end) {
+    final startText = _formatIndonesianDate(start);
+    if (end == null || end.isEmpty || end == '-' || end == start) return startText;
+    return '$startText - ${_formatIndonesianDate(end)}';
   }
 
   @override
@@ -78,7 +92,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                     )),
                                   )
                                 else if (prov.events.isEmpty)
-                                  const Center(child: Text('Belum ada jadwal terisi'))
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 40),
+                                    child: Center(child: Text('Belum ada jadwal terisi')),
+                                  )
                                 else
                                   ListView.separated(
                                     shrinkWrap: true,
@@ -89,7 +106,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                       final event = prov.events[index];
                                       return _FilledScheduleCard(
                                         title: event.nameEvent,
-                                        subtitle: '${event.location} - ${_formatIndonesianDate(event.startDate)}',
+                                        vendor: event.vendor ?? '-',
+                                        location: event.location ?? '-',
+                                        dateRange: _formatDateRange(event.startDate, event.endDate),
+                                        fileUrl: event.fileUrl,
                                       );
                                     },
                                   ),
@@ -181,9 +201,18 @@ class _ScheduleHeader extends StatelessWidget {
 // ═══════════════════════════════════════════════════════════
 class _FilledScheduleCard extends StatelessWidget {
   final String title;
-  final String subtitle;
+  final String vendor;
+  final String location;
+  final String dateRange;
+  final String? fileUrl;
 
-  const _FilledScheduleCard({required this.title, required this.subtitle});
+  const _FilledScheduleCard({
+    required this.title,
+    required this.vendor,
+    required this.location,
+    required this.dateRange,
+    this.fileUrl,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -195,6 +224,7 @@ class _FilledScheduleCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFEBF5FC).withValues(alpha: 0.5)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 42,
@@ -221,13 +251,56 @@ class _FilledScheduleCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  subtitle,
+                  '$location • $vendor',
                   style: GoogleFonts.inter(
                     fontSize: 15,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                     color: const Color(0xFF222222),
                   ),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  dateRange,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF444444),
+                  ),
+                ),
+                if (fileUrl != null && fileUrl!.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  InkWell(
+                    onTap: () async {
+                      final uri = Uri.parse(fileUrl!);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFF1AA0EC)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.description_outlined, size: 16, color: Color(0xFF1AA0EC)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Lihat Rundown',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF1AA0EC),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

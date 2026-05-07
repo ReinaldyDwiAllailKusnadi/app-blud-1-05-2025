@@ -24,4 +24,18 @@ class AuthService {
   Future<Response> logout() async {
     return await _dioClient.post('/logout');
   }
+
+  Future<Response> updateProfile({
+    required String name,
+    required String username,
+    required String phone,
+    required String email,
+  }) async {
+    return await _dioClient.post('/profile/update', data: {
+      'name': name,
+      'username': username,
+      'phone': phone,
+      'email': email,
+    });
+  }
 }

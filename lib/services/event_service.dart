@@ -7,7 +7,7 @@ class EventService {
   EventService(this._dioClient);
 
   Future<Response> getJadwal() async {
-    return await _dioClient.get('/jadwal');
+    return await _dioClient.get('/schedules');
   }
 
   Future<Response> getBookingByLocation(String slug) async {

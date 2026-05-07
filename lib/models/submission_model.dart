@@ -47,27 +47,47 @@ class SubmissionModel {
 
   factory SubmissionModel.fromJson(Map<String, dynamic> json) {
     return SubmissionModel(
-      id: json['id'] ?? 0,
-      userId: json['user_id'],
-      namePIC: json['namePIC'] ?? '',
-      noHp: json['no_hp'] ?? '',
-      address: json['address'] ?? '',
-      vendor: json['vendor'] ?? '',
-      location: json['location'] ?? '',
-      applyDate: json['apply_date'],
-      startDate: json['start_date'] ?? '',
-      endDate: json['end_date'] ?? '',
-      nameEvent: json['name_event'] ?? '',
-      status: json['status'] ?? 'pending',
-      notes: json['notes'],
-      file: json['file'],
-      ktp: json['ktp'],
-      applLetter: json['appl_letter'],
-      actvLetter: json['actv_letter'],
-      fileUrl: json['file_url'],
-      ktpUrl: json['ktp_url'],
-      applLetterUrl: json['appl_letter_url'],
-      actvLetterUrl: json['actv_letter_url'],
+      id: parseInt(json['id']),
+      userId: parseNullableInt(json['user_id']),
+      namePIC: parseString(json['namePIC']),
+      noHp: parseString(json['no_hp']),
+      address: parseString(json['address']),
+      vendor: parseString(json['vendor']),
+      location: parseString(json['location']),
+      applyDate: json['apply_date']?.toString(),
+      startDate: parseString(json['start_date'], defaultValue: ''),
+      endDate: parseString(json['end_date'], defaultValue: ''),
+      nameEvent: parseString(json['name_event']),
+      status: parseString(json['status'], defaultValue: 'pending'),
+      notes: json['notes']?.toString(),
+      file: json['file']?.toString(),
+      ktp: json['ktp']?.toString(),
+      applLetter: json['appl_letter']?.toString(),
+      actvLetter: json['actv_letter']?.toString(),
+      fileUrl: json['file_url']?.toString(),
+      ktpUrl: json['ktp_url']?.toString(),
+      applLetterUrl: json['appl_letter_url']?.toString(),
+      actvLetterUrl: json['actv_letter_url']?.toString(),
     );
+  }
+
+  // Helper static methods for safe parsing
+  static int parseInt(dynamic value, {int defaultValue = 0}) {
+    if (value == null) return defaultValue;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? defaultValue;
+    return defaultValue;
+  }
+
+  static int? parseNullableInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
+  static String parseString(dynamic value, {String defaultValue = '-'}) {
+    if (value == null) return defaultValue;
+    return value.toString();
   }
 }

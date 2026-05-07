@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../providers/auth_provider.dart';
 import '../auth/welcome_screen.dart';
 import '../../core/widgets/pressable.dart';
+import '../../models/user_model.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -53,7 +53,6 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
               ),
-
             ],
           );
         },
@@ -61,167 +60,331 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  void _showEditBottomSheet(BuildContext context, UserModel? user) {
+    if (user == null) return;
+
+    final nameController = TextEditingController(text: user.name);
+    final usernameController = TextEditingController(text: user.username);
+    final phoneController = TextEditingController(text: user.phone ?? '');
+    final emailController = TextEditingController(text: user.email);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Edit Profil',
+                style: GoogleFonts.inter(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              _buildFieldLabel('Nama Lengkap'),
+              _buildTextField(nameController, 'Masukkan nama lengkap'),
+              const SizedBox(height: 20),
+
+              _buildFieldLabel('Username'),
+              _buildTextField(usernameController, 'Masukkan username'),
+              const SizedBox(height: 20),
+
+              _buildFieldLabel('Nomor HP'),
+              _buildTextField(phoneController, 'Masukkan nomor HP', keyboardType: TextInputType.phone),
+              const SizedBox(height: 20),
+
+              _buildFieldLabel('Email (Read-only)'),
+              _buildTextField(emailController, '', enabled: false),
+              const SizedBox(height: 32),
+
+              Consumer<AuthProvider>(
+                builder: (context, authProv, _) {
+                  return SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: ElevatedButton(
+                      onPressed: authProv.isLoading ? null : () async {
+                        if (nameController.text.isEmpty || usernameController.text.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Nama dan Username wajib diisi')),
+                          );
+                          return;
+                        }
+
+                        final success = await authProv.updateProfile(
+                          name: nameController.text.trim(),
+                          username: usernameController.text.trim(),
+                          phone: phoneController.text.trim(),
+                          email: emailController.text.trim(),
+                        );
+
+                        if (context.mounted) {
+                          if (success) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Profil berhasil diperbarui'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(authProv.errorMessage ?? 'Gagal memperbarui profil'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1461D2),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 0,
+                      ),
+                      child: authProv.isLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            )
+                          : Text(
+                              'Simpan Perubahan',
+                              style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
+                            ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    'Batal',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFieldLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      child: Text(
+        label,
+        style: GoogleFonts.inter(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF64748B),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String hint, {bool enabled = true, TextInputType? keyboardType}) {
+    return TextField(
+      controller: controller,
+      enabled: enabled,
+      keyboardType: keyboardType,
+      style: GoogleFonts.inter(
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        color: enabled ? const Color(0xFF1E293B) : const Color(0xFF94A3B8),
+      ),
+      decoration: InputDecoration(
+        hintText: hint,
+        filled: true,
+        fillColor: enabled ? const Color(0xFFF8FAFC) : const Color(0xFFF1F5F9),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      ),
+    );
+  }
+
   Widget _buildProfileHeader(String name, String username) {
+    String initials = '';
+    if (name.isNotEmpty) {
+      final names = name.split(' ');
+      if (names.length > 1) {
+        initials = '${names[0][0]}${names[1][0]}'.toUpperCase();
+      } else {
+        initials = names[0][0].toUpperCase();
+      }
+    } else {
+      initials = '?';
+    }
+
     return Column(
       children: [
         Text(
-          'Profil',
+          'Profil Saya',
           style: GoogleFonts.inter(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
             color: Colors.white,
             letterSpacing: 0.5,
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 30),
         Container(
-          width: 100,
-          height: 100,
+          width: 110,
+          height: 110,
           decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.2),
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 3),
+            border: Border.all(color: Colors.white, width: 4),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
-          child: ClipOval(
-            child: CachedNetworkImage(
-              imageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&h=300&fit=crop',
-              fit: BoxFit.cover,
-              placeholder: (context, url) => Container(color: Colors.grey.shade100, child: const Center(child: CircularProgressIndicator(strokeWidth: 2))),
-              errorWidget: (context, url, error) => Container(color: Colors.white, child: const Icon(Icons.person, size: 50, color: Colors.grey)),
+          child: Center(
+            child: Text(
+              initials,
+              style: GoogleFonts.inter(
+                fontSize: 36,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Text(
           name,
           style: GoogleFonts.inter(
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
             color: Colors.white,
             letterSpacing: -0.5,
           ),
         ),
+        const SizedBox(height: 4),
         Text(
           username.startsWith('@') ? username : '@$username',
           style: GoogleFonts.inter(
-            fontSize: 15,
-            fontWeight: FontWeight.w400,
-            color: const Color(0xFFA5C5F6),
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.white.withValues(alpha: 0.7),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildProfileCard(BuildContext context, dynamic user, AuthProvider authProv) {
+  Widget _buildProfileCard(BuildContext context, UserModel? user, AuthProvider authProv) {
+    final bool isWide = MediaQuery.of(context).size.width > 600;
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 30,
-            offset: const Offset(0, 8),
+            offset: const Offset(0, 12),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Informasi Profil',
-            style: GoogleFonts.inter(
-              fontSize: 17,
-              fontWeight: FontWeight.w800,
-              color: const Color(0xFF111827),
-            ),
-          ),
-          const SizedBox(height: 20),
-          _ProfileItem(
-            label: 'Nama',
-            value: user?.name ?? '-',
-            trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF), size: 20),
-          ),
-          const SizedBox(height: 20),
-          _ProfileItem(
-            label: 'Username',
-            value: user?.username ?? '-',
-            trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF), size: 20),
-          ),
-
-          const SizedBox(height: 28),
-          Text(
-            'Informasi Pribadi',
-            style: GoogleFonts.inter(
-              fontSize: 17,
-              fontWeight: FontWeight.w800,
-              color: const Color(0xFF111827),
-            ),
-          ),
-          const SizedBox(height: 20),
-          _ProfileItem(
-            label: 'ID Pengguna',
-            value: user != null ? 'BLUD-${user.id}' : '-',
-            trailing: const Icon(Icons.copy_rounded, color: Color(0xFF9CA3AF), size: 20),
-          ),
-          const SizedBox(height: 20),
-          _ProfileItem(
-            label: 'Email',
-            value: user?.email ?? '-',
-            trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE6F5E9),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                'Terverifikasi',
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Informasi Profil',
                 style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF2E8B57),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF1E293B),
                 ),
               ),
-            ),
+              IconButton(
+                onPressed: () => _showEditBottomSheet(context, user),
+                icon: const Icon(Icons.edit_note_rounded, color: Color(0xFF1461D2), size: 28),
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
           ),
-          const SizedBox(height: 20),
-          _ProfileItem(
-            label: 'Nomor Telepon',
-            value: user?.phone ?? '-',
+          const SizedBox(height: 24),
+          Wrap(
+            spacing: 24,
+            runSpacing: 24,
+            children: [
+              _profileInfoItem(context, 'Nama Lengkap', user?.name ?? '-', isWide),
+              _profileInfoItem(context, 'Username', user?.username ?? '-', isWide),
+              _profileInfoItem(context, 'Email', user?.email ?? '-', isWide),
+              _profileInfoItem(context, 'Nomor HP', user?.phone ?? '-', isWide),
+            ],
           ),
-
-          const SizedBox(height: 32),
-          // Action Buttons
+          const SizedBox(height: 40),
           Row(
             children: [
               Expanded(
                 child: _ActionPillButton(
                   label: 'Edit Profil',
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Edit profil belum tersedia')),
-                    );
-                  },
+                  onPressed: () => _showEditBottomSheet(context, user),
                   isOutlined: true,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: _ActionPillButton(
-                  label: 'Keluar',
+                  label: 'Keluar Akun',
                   onPressed: () async {
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                         title: const Text('Keluar'),
                         content: const Text('Apakah Anda yakin ingin keluar dari akun?'),
                         actions: [
@@ -231,7 +394,7 @@ class ProfileScreen extends StatelessWidget {
                           ),
                           TextButton(
                             onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Keluar', style: TextStyle(color: Colors.red)),
+                            child: const Text('Keluar', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
@@ -258,45 +421,32 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
-}
 
-
-class _ProfileItem extends StatelessWidget {
-  final String label;
-  final String value;
-  final Widget? trailing;
-
-  const _ProfileItem({required this.label, required this.value, this.trailing});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF6B7280),
-              ),
+  Widget _profileInfoItem(BuildContext context, String label, String value, bool isWide) {
+    return SizedBox(
+      width: isWide ? (MediaQuery.of(context).size.width - 120) / 2 : double.infinity,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF64748B),
             ),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF111827),
-              ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value.isNotEmpty ? value : '-',
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1E293B),
             ),
-          ],
-        ),
-        if (trailing != null) trailing!,
-      ],
+          ),
+        ],
+      ),
     );
   }
 }

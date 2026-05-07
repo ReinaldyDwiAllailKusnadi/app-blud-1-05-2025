@@ -74,6 +74,11 @@ class _SubmissionHistoryScreenState extends State<SubmissionHistoryScreen> {
               const SizedBox(height: 16),
               const Text('Belum ada pengajuan'),
               const SizedBox(height: 8),
+              Text(
+                'Akun: ${auth.user?.email ?? 'Tidak diketahui'}',
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
               TextButton(
                 onPressed: () => data.fetchHistory(),
                 child: const Text('Refresh'),
@@ -164,15 +169,42 @@ class _SubmissionHistoryScreenState extends State<SubmissionHistoryScreen> {
 
   Widget _statusBadge(String status) {
     Color color;
-    switch (status) {
-      case 'approved': color = AppTheme.approvedColor; break;
-      case 'rejected': color = AppTheme.rejectedColor; break;
-      default: color = AppTheme.pendingColor;
+    String label;
+    
+    switch (status.toLowerCase()) {
+      case 'approved':
+      case 'disetujui':
+        color = const Color(0xFF16A34A); // Green
+        label = 'Disetujui';
+        break;
+      case 'rejected':
+      case 'ditolak':
+        color = const Color(0xFFDC2626); // Red
+        label = 'Ditolak';
+        break;
+      case 'pending':
+      case 'menunggu':
+      case 'waiting':
+      default:
+        color = const Color(0xFFEA580C); // Orange
+        label = 'Menunggu';
     }
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(AppTheme.radiusFull)),
-      child: Text(status.toUpperCase(), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
+      ),
     );
   }
 

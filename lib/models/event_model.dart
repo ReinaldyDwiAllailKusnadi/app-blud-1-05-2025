@@ -7,6 +7,7 @@ class EventModel {
   final String? vendor;
   final String? file;
   final String? fileUrl;
+  final String? status;
 
   EventModel({
     required this.id,
@@ -17,18 +18,20 @@ class EventModel {
     this.vendor,
     this.file,
     this.fileUrl,
+    this.status,
   });
 
   factory EventModel.fromJson(Map<String, dynamic> json) {
     return EventModel(
-      id: json['id'] ?? 0,
-      nameEvent: json['name_event'] ?? json['title'] ?? json['name'] ?? '-',
-      startDate: json['start_date'] ?? '-',
-      endDate: json['end_date'] ?? '-',
-      location: json['location'] ?? '-',
-      vendor: json['vendor'],
-      file: json['file'],
-      fileUrl: json['file_url'],
+      id: parseInt(json['id']),
+      nameEvent: json['name_event']?.toString() ?? '-',
+      startDate: json['start_date']?.toString() ?? '-',
+      endDate: json['end_date']?.toString() ?? '-',
+      location: json['location']?.toString() ?? '-',
+      vendor: json['vendor']?.toString() ?? '-',
+      file: json['file']?.toString(),
+      fileUrl: json['file_url']?.toString(),
+      status: json['status']?.toString(),
     );
   }
 
@@ -41,5 +44,14 @@ class EventModel {
     'vendor': vendor,
     'file': file,
     'file_url': fileUrl,
+    'status': status,
   };
+
+  // Helper static methods for safe parsing
+  static int parseInt(dynamic value, {int defaultValue = 0}) {
+    if (value == null) return defaultValue;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? defaultValue;
+    return defaultValue;
+  }
 }

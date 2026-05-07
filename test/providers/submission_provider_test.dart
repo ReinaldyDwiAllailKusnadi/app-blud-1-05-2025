@@ -4,15 +4,21 @@ import 'package:dio/dio.dart';
 import 'package:blud_flutter/providers/submission_provider.dart';
 import 'package:blud_flutter/services/submission_service.dart';
 
+import 'package:blud_flutter/core/network/dio_client.dart';
+
 class MockSubmissionService extends Mock implements SubmissionService {}
+class MockDioClient extends Mock implements DioClient {}
 
 void main() {
   late SubmissionProvider submissionProvider;
   late MockSubmissionService mockSubmissionService;
+  late MockDioClient mockDioClient;
 
   setUp(() {
     mockSubmissionService = MockSubmissionService();
-    submissionProvider = SubmissionProvider(mockSubmissionService);
+    mockDioClient = MockDioClient();
+    submissionProvider = SubmissionProvider(mockSubmissionService, mockDioClient);
+    registerFallbackValue(FormData());
   });
 
   group('SubmissionProvider Tests', () {
@@ -57,7 +63,7 @@ void main() {
       );
 
       // Act
-      final result = await submissionProvider.submitBooking({'test': 'data'});
+      final result = await submissionProvider.submitBooking(FormData.fromMap({'test': 'data'}));
 
       // Assert
       expect(result, true);
