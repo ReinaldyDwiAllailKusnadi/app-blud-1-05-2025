@@ -384,17 +384,43 @@ class ProfileScreen extends StatelessWidget {
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                        title: const Text('Keluar'),
-                        content: const Text('Apakah Anda yakin ingin keluar dari akun?'),
+                        backgroundColor: Colors.white,
+                        surfaceTintColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                        title: Text(
+                          'Keluar',
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF1E293B),
+                          ),
+                        ),
+                        content: Text(
+                          'Apakah Anda yakin ingin keluar dari akun?',
+                          style: GoogleFonts.inter(
+                            color: const Color(0xFF64748B),
+                            fontSize: 15,
+                          ),
+                        ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
-                            child: const Text('Batal'),
+                            child: Text(
+                              'Batal',
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF1C7EE8),
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                           ),
                           TextButton(
                             onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Keluar', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                            child: Text(
+                              'Keluar',
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFFEF4444),
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                           ),
                         ],
                       ),

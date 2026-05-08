@@ -12,7 +12,7 @@ import 'providers/content_provider.dart';
 import 'providers/event_provider.dart';
 import 'providers/submission_provider.dart';
 import 'core/services/cache_service.dart';
-import 'screens/splash/splash_screen.dart';
+import 'screens/auth/auth_wrapper.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,7 +55,7 @@ class BludApp extends StatelessWidget {
       title: 'BLUD Pariwisata',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const SplashScreen(),
+      home: const AuthWrapper(),
     );
   }
 }
