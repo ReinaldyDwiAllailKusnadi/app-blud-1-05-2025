@@ -11,15 +11,20 @@ class AuthProvider extends BaseProvider {
   final DioClient _dioClient;
 
   UserModel? _user;
+  bool _isLoginLoading = false;
+  bool _isGoogleLoading = false;
 
   AuthProvider(this._authService, this._dioClient);
 
   UserModel? get user => _user;
   bool get isAuthenticated => _user != null;
   bool get isLoggedIn => _user != null;
+  bool get isLoginLoading => _isLoginLoading;
+  bool get isGoogleLoading => _isGoogleLoading;
 
   Future<bool> login(String email, String password) async {
-    setLoading(true);
+    _isLoginLoading = true;
+    notifyListeners();
     setError(null);
     try {
       final response = await _authService.login(email, password);
@@ -29,11 +34,13 @@ class AuthProvider extends BaseProvider {
       await _dioClient.saveToken(token);
       _user = UserModel.fromJson(userData);
       
-      setLoading(false);
+      _isLoginLoading = false;
+      notifyListeners();
       return true;
     } catch (e) {
       handleDioError(e, defaultMessage: 'Login gagal. Periksa kembali email dan password Anda.');
-      setLoading(false);
+      _isLoginLoading = false;
+      notifyListeners();
       return false;
     }
   }
@@ -116,7 +123,8 @@ class AuthProvider extends BaseProvider {
   }
 
   Future<bool> loginWithGoogle() async {
-    setLoading(true);
+    _isGoogleLoading = true;
+    notifyListeners();
     setError(null);
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn(
@@ -128,7 +136,8 @@ class AuthProvider extends BaseProvider {
 
       if (googleUser == null) {
         // User membatalkan login
-        setLoading(false);
+        _isGoogleLoading = false;
+        notifyListeners();
         return false;
       }
 
@@ -137,7 +146,8 @@ class AuthProvider extends BaseProvider {
 
       if (googleAuth.idToken == null) {
         setError('Gagal mendapatkan ID Token dari Google.');
-        setLoading(false);
+        _isGoogleLoading = false;
+        notifyListeners();
         return false;
       }
 
@@ -151,7 +161,7 @@ class AuthProvider extends BaseProvider {
       await _dioClient.saveToken(token);
       _user = UserModel.fromJson(userData);
 
-      setLoading(false);
+      _isGoogleLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
@@ -161,7 +171,8 @@ class AuthProvider extends BaseProvider {
       } else {
         setError('Gagal login Google: $e');
       }
-      setLoading(false);
+      _isGoogleLoading = false;
+      notifyListeners();
       return false;
     }
   }

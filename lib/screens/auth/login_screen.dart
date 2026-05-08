@@ -237,8 +237,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         return Column(
                           children: [
                             GradientButton(
-                              label: auth.isLoading ? 'Loading...' : 'Login',
-                              onTap: auth.isLoading ? () {} : _handleLogin,
+                              label: auth.isLoginLoading ? 'Loading...' : 'Login',
+                              onTap: (auth.isLoginLoading || auth.isGoogleLoading) ? () {} : _handleLogin,
                             ),
                             const SizedBox(height: 24),
                             
@@ -265,8 +265,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             // ── Google Login Button ──
                             GoogleSignInButton(
-                              isLoading: auth.isLoading,
-                              onTap: auth.isLoading ? () {} : _handleGoogleLogin,
+                              isLoading: auth.isGoogleLoading,
+                              onTap: (auth.isLoginLoading || auth.isGoogleLoading) ? () {} : _handleGoogleLogin,
                             ),
                           ],
                         );
