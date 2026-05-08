@@ -78,42 +78,22 @@ class _SplashScreenState extends State<SplashScreen>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: 100,
-                        height: 100,
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(32),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 30,
+                              offset: const Offset(0, 10),
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.landscape_rounded,
-                          size: 56,
-                          color: AppTheme.primaryColor,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      const Text(
-                        'BLUD Pariwisata',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Wisata Banyumas',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontWeight: FontWeight.w400,
+                        child: Image.asset(
+                          'assets/images/logo_blud.png',
+                          width: 140,
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ],

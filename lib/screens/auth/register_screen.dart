@@ -32,6 +32,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  String _generateUniqueUsername(String email) {
+    try {
+      final prefix = email.split('@').first.toLowerCase();
+      final cleaned = prefix.replaceAll(RegExp(r'[^a-z0-9._]'), '');
+      final base = cleaned.isEmpty ? 'user' : cleaned;
+      // Ambil 5 digit terakhir dari timestamp agar lebih unik
+      final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+      final suffix = timestamp.length > 5 
+          ? timestamp.substring(timestamp.length - 5) 
+          : timestamp;
+      return '${base}_$suffix';
+    } catch (e) {
+      return 'user_${DateTime.now().millisecondsSinceEpoch}';
+    }
+  }
+
   Future<void> _handleRegister() async {
     final name = _nameCtrl.text.trim();
     final phone = _phoneCtrl.text.trim();
@@ -46,6 +62,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    // Validasi format email sederhana
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Format email tidak valid.')),
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kata sandi minimal 6 karakter.')),
+      );
+      return;
+    }
+
     if (password != confirm) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Konfirmasi kata sandi tidak cocok.')),
@@ -54,8 +86,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    
+    // Generate username otomatis
+    final username = _generateUniqueUsername(email);
+
     final success = await authProvider.register({
       'name': name,
+      'username': username,
       'phone': phone.isEmpty ? null : phone,
       'email': email,
       'password': password,
@@ -63,11 +100,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     if (success && mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => MainScreen()),
-        (route) => false,
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Pendaftaran berhasil. Silakan login.'),
+          backgroundColor: Colors.green,
+        ),
       );
+
+      if (auth.isLoggedIn) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => MainScreen()),
+          (route) => false,
+        );
+      } else {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+      }
     } else if (mounted && authProvider.errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -322,7 +376,7 @@ class _InfoBox extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Kami akan mengirimkan kode verifikasi ke nomor WhatsApp Anda.',
+              'Pastikan Email dan Nomor Handphone aktif karena akan digunakan untuk informasi lebih lanjut.',
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,

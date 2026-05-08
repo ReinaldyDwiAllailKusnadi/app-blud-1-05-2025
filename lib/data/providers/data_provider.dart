@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import '../core/services/dio_client.dart';
+import '../../core/network/dio_client.dart';
 import '../models/models.dart';
 import '../../core/providers/base_provider.dart';
 

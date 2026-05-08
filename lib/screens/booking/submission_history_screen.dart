@@ -5,6 +5,9 @@ import '../../providers/auth_provider.dart';
 import '../../providers/submission_provider.dart';
 import '../auth/login_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../core/widgets/app_layout.dart';
+import '../../core/widgets/app_states.dart';
+import '../../core/widgets/app_buttons.dart';
 
 class SubmissionHistoryScreen extends StatefulWidget {
   const SubmissionHistoryScreen({super.key});
@@ -30,135 +33,130 @@ class _SubmissionHistoryScreenState extends State<SubmissionHistoryScreen> {
     final auth = Provider.of<AuthProvider>(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        title: const Text('Riwayat Pengajuan'),
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+      backgroundColor: AppTheme.backgroundColor,
+      body: Column(
+        children: [
+          const AppGradientHeader(title: 'Riwayat Pengajuan'),
+          Expanded(child: _buildBody(auth)),
+        ],
       ),
-      body: _buildBody(auth),
     );
   }
 
   Widget _buildBody(AuthProvider auth) {
     if (!auth.isLoggedIn) {
       return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.lock_outline, size: 64, color: AppTheme.textLight),
-            const SizedBox(height: 16),
-            const Text('Silakan login untuk melihat riwayat'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.lock_person_rounded, size: 80, color: AppTheme.textLight),
+              const SizedBox(height: 24),
+              const Text(
+                'Akses Terbatas',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.textPrimary),
               ),
-              child: const Text('Login'),
-            ),
-          ],
+              const SizedBox(height: 8),
+              const Text(
+                'Silakan masuk ke akun Anda untuk melihat riwayat pengajuan sewa lokasi.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 15, color: AppTheme.textSecondary),
+              ),
+              const SizedBox(height: 32),
+              AppPrimaryButton(
+                text: 'MASUK SEKARANG',
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen())),
+              ),
+            ],
+          ),
         ),
       );
     }
 
     return Consumer<SubmissionProvider>(builder: (context, data, _) {
-      if (data.isLoading) return const Center(child: CircularProgressIndicator());
+      if (data.isLoading) return const AppLoading();
+      
       if (data.history.isEmpty) {
-        return Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.inbox_outlined, size: 64, color: AppTheme.textLight),
-              const SizedBox(height: 16),
-              const Text('Belum ada pengajuan'),
-              const SizedBox(height: 8),
-              Text(
-                'Akun: ${auth.user?.email ?? 'Tidak diketahui'}',
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => data.fetchHistory(),
-                child: const Text('Refresh'),
-              ),
-            ],
-          ),
+        return const AppEmptyState(
+          title: 'Belum Ada Pengajuan',
+          subtitle: 'Anda belum pernah melakukan pengajuan sewa lokasi.',
         );
       }
+
       return RefreshIndicator(
         onRefresh: () => data.fetchHistory(),
         child: ListView.builder(
-          padding: const EdgeInsets.all(AppTheme.spacingMd),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           itemCount: data.history.length,
           itemBuilder: (context, index) {
             final item = data.history[index];
-            return Card(
-              margin: const EdgeInsets.only(bottom: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            item.nameEvent,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        _statusBadge(item.status),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    _infoRow(Icons.business_rounded, item.vendor),
-                    _infoRow(Icons.location_on_rounded, item.location),
-                    _infoRow(Icons.calendar_month_rounded, '${item.startDate} - ${item.endDate}'),
-                    if (item.applyDate != null) _infoRow(Icons.access_time_rounded, 'Diajukan: ${item.applyDate}'),
-                    if (item.notes != null && item.notes!.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: item.status == 'rejected' ? Colors.red.shade50 : Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+            return AppCard(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
                         child: Text(
-                          'Catatan Admin: ${item.notes}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: item.status == 'rejected' ? Colors.red.shade800 : Colors.blue.shade800,
-                          ),
+                          item.nameEvent,
+                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.textPrimary, height: 1.2),
                         ),
                       ),
+                      const SizedBox(width: 12),
+                      AppStatusBadge(status: item.status),
                     ],
-                    // Document links
-                    const SizedBox(height: 12),
-                    const Divider(height: 24),
-                    const Text(
-                      'Dokumen Pendukung:',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        if (item.fileUrl != null) _docChip('Proposal', item.fileUrl!),
-                        if (item.ktpUrl != null) _docChip('KTP', item.ktpUrl!),
-                        if (item.applLetterUrl != null) _docChip('Surat Pengajuan', item.applLetterUrl!),
-                        if (item.actvLetterUrl != null) _docChip('Surat Kegiatan', item.actvLetterUrl!),
-                      ],
+                  ),
+                  const SizedBox(height: 16),
+                  _infoRow(Icons.business_rounded, item.vendor),
+                  _infoRow(Icons.location_on_rounded, item.location),
+                  _infoRow(Icons.calendar_month_rounded, '${item.startDate} - ${item.endDate}'),
+                  if (item.applyDate != null) _infoRow(Icons.access_time_rounded, 'Diajukan: ${item.applyDate}'),
+                  
+                  if (item.notes != null && item.notes!.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: (item.status.toLowerCase() == 'rejected' || item.status.toLowerCase() == 'ditolak') 
+                            ? AppTheme.errorColor.withValues(alpha: 0.1) 
+                            : AppTheme.navBlue.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      ),
+                      child: Text(
+                        'Catatan Admin: ${item.notes}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: (item.status.toLowerCase() == 'rejected' || item.status.toLowerCase() == 'ditolak') 
+                              ? AppTheme.errorColor 
+                              : AppTheme.navBlue,
+                        ),
+                      ),
                     ),
                   ],
-                ),
+
+                  const Divider(height: 32),
+                  const Text(
+                    'DOKUMEN TERLAMPIR:',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppTheme.textLight, letterSpacing: 0.5),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      if (item.fileUrl != null) _docButton('Proposal', item.fileUrl!),
+                      if (item.ktpUrl != null) _docButton('KTP', item.ktpUrl!),
+                      if (item.applLetterUrl != null) _docButton('Surat Pengajuan', item.applLetterUrl!),
+                      if (item.actvLetterUrl != null) _docButton('Surat Kegiatan', item.actvLetterUrl!),
+                    ],
+                  ),
+                ],
               ),
             );
           },
@@ -167,63 +165,40 @@ class _SubmissionHistoryScreenState extends State<SubmissionHistoryScreen> {
     });
   }
 
-  Widget _statusBadge(String status) {
-    Color color;
-    String label;
-    
-    switch (status.toLowerCase()) {
-      case 'approved':
-      case 'disetujui':
-        color = const Color(0xFF16A34A); // Green
-        label = 'Disetujui';
-        break;
-      case 'rejected':
-      case 'ditolak':
-        color = const Color(0xFFDC2626); // Red
-        label = 'Ditolak';
-        break;
-      case 'pending':
-      case 'menunggu':
-      case 'waiting':
-      default:
-        color = const Color(0xFFEA580C); // Orange
-        label = 'Menunggu';
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: color,
-        ),
-      ),
-    );
-  }
-
   Widget _infoRow(IconData icon, String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(children: [
-        Icon(icon, size: 14, color: AppTheme.textSecondary),
-        const SizedBox(width: 8),
-        Expanded(child: Text(text, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary))),
-      ]),
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 15, color: AppTheme.textLight),
+          const SizedBox(width: 10),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary, fontWeight: FontWeight.w500))),
+        ],
+      ),
     );
   }
 
-  Widget _docChip(String label, String url) {
-    return ActionChip(
-      avatar: const Icon(Icons.picture_as_pdf, size: 14, color: AppTheme.primaryColor),
-      label: Text(label, style: const TextStyle(fontSize: 11)),
-      onPressed: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+  Widget _docButton(String label, String url) {
+    return InkWell(
+      onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppTheme.backgroundColor,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppTheme.dividerColor),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.picture_as_pdf_rounded, size: 14, color: AppTheme.errorColor),
+            const SizedBox(width: 6),
+            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+          ],
+        ),
+      ),
     );
   }
 }

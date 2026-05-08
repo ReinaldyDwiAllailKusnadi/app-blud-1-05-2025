@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:dio/dio.dart';
 import '../models/event_model.dart';
 import '../services/event_service.dart';
 import '../core/services/cache_service.dart';

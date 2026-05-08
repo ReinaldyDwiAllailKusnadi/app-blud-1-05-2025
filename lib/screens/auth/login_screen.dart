@@ -45,7 +45,27 @@ class _LoginScreenState extends State<LoginScreen> {
     if (success && mounted) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => MainScreen()),
+        MaterialPageRoute(builder: (_) => const MainScreen()),
+        (route) => false,
+      );
+    } else if (mounted && authProvider.errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage!),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleGoogleLogin() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final success = await authProvider.loginWithGoogle();
+
+    if (success && mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const MainScreen()),
         (route) => false,
       );
     } else if (mounted && authProvider.errorMessage != null) {
@@ -214,9 +234,41 @@ class _LoginScreenState extends State<LoginScreen> {
                     // ── Login Button (Gradient) ──
                     Consumer<AuthProvider>(
                       builder: (context, auth, child) {
-                        return GradientButton(
-                          label: auth.isLoading ? 'Loading...' : 'Login',
-                          onTap: auth.isLoading ? () {} : _handleLogin,
+                        return Column(
+                          children: [
+                            GradientButton(
+                              label: auth.isLoading ? 'Loading...' : 'Login',
+                              onTap: auth.isLoading ? () {} : _handleLogin,
+                            ),
+                            const SizedBox(height: 24),
+                            
+                            // Divider OR
+                            Row(
+                              children: [
+                                Expanded(child: Divider(color: Colors.grey.shade300)),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  child: Text(
+                                    'atau masuk dengan',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey.shade500,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(child: Divider(color: Colors.grey.shade300)),
+                              ],
+                            ),
+
+                            const SizedBox(height: 24),
+
+                            // ── Google Login Button ──
+                            GoogleSignInButton(
+                              isLoading: auth.isLoading,
+                              onTap: auth.isLoading ? () {} : _handleGoogleLogin,
+                            ),
+                          ],
                         );
                       },
                     ),

@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "257992216746",
+    "project_id": "bludpariwisataa",
+    "storage_bucket": "bludpariwisataa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:257992216746:android:43748c5786d1bdbac840d3",
+        "android_client_info": {
+          "package_name": "com.blud.pariwisata.blud_flutter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "257992216746-s3ugartrlqilrnv70l1hhn1fpdt9r5ab.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.blud.pariwisata.blud_flutter",
+            "certificate_hash": "f289d7b790a3852671874fbe167abc37c1a59fd6"
+          }
+        },
+        {
+          "client_id": "257992216746-1pm552pmrsd83o5n0rdqqr6g5k4j0ur5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvtDl_MDrOW5UgFooQ_l6KL93jSBOnBRw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "257992216746-1pm552pmrsd83o5n0rdqqr6g5k4j0ur5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

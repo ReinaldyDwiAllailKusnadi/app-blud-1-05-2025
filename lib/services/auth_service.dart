@@ -13,6 +13,12 @@ class AuthService {
     });
   }
 
+  Future<Response> loginWithGoogleAPI(String idToken) async {
+    return await _dioClient.post('/auth/google', data: {
+      'id_token': idToken,
+    });
+  }
+
   Future<Response> register(Map<String, dynamic> data) async {
     return await _dioClient.post('/register', data: data);
   }

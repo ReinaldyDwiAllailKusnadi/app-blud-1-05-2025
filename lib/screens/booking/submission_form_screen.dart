@@ -315,7 +315,7 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Data Pengaju',
+                                'Data Pengajuan Sewa',
                                 style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800, color: const Color(0xFF1E293B)),
                               ),
                               const SizedBox(height: 20),
@@ -553,7 +553,7 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
           child: Text(label, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
         ),
         DropdownButtonFormField<String>(
-          value: value,
+          initialValue: value,
           isExpanded: true,
           icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
           style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),

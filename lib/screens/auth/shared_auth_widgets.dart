@@ -27,44 +27,10 @@ class LogoBlud extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Transform.translate(
-          offset: const Offset(-6, 0),
-          child: CustomPaint(
-            size: const Size(86, 86),
-            painter: BludLogoPainter(),
-          ),
-        ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'BLUD',
-              style: GoogleFonts.inter(
-                fontSize: 35,
-                fontWeight: FontWeight.w900,
-                color: AuthColors.logoBlue,
-                height: 0.8,
-                letterSpacing: -0.01 * 35,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'PARIWISATA',
-              style: GoogleFonts.inter(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w800,
-                color: AuthColors.logoBlue,
-                letterSpacing: 0.06 * 13.5,
-              ),
-            ),
-          ],
-        ),
-      ],
+    return Image.asset(
+      'assets/images/logo_blud.png',
+      height: 90, // Ukuran logo yang proporsional
+      fit: BoxFit.contain,
     );
   }
 }
@@ -170,6 +136,69 @@ class GradientButton extends StatelessWidget {
                 color: Colors.white,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class GoogleSignInButton extends StatelessWidget {
+  final VoidCallback onTap;
+  final bool isLoading;
+
+  const GoogleSignInButton({
+    super.key,
+    required this.onTap,
+    this.isLoading = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: isLoading ? null : onTap,
+      child: Container(
+        width: double.infinity,
+        height: 54,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: AuthColors.googleBorder, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isLoading)
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(AuthColors.googleText),
+                ),
+              )
+            else ...[
+              CustomPaint(
+                size: const Size(20, 20),
+                painter: GoogleLogoPainter(),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Masuk dengan Google',
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AuthColors.googleText,
+                ),
+              ),
+            ],
           ],
         ),
       ),
