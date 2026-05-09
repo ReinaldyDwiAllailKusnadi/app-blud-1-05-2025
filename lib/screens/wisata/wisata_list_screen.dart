@@ -15,7 +15,10 @@ class _WisataListScreenState extends State<WisataListScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => Provider.of<DataProvider>(context, listen: false).fetchWisata());
+    Future.microtask(() {
+      if (!mounted) return;
+      Provider.of<DataProvider>(context, listen: false).fetchWisata();
+    });
   }
 
   @override

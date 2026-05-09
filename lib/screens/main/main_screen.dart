@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_theme.dart';
 import '../home/home_screen.dart';
 import '../wisata/destination_list_screen.dart';
+import '../recommendation/recommendation_screen.dart';
 import '../jadwal/schedule_screen.dart';
 import '../profile/profile_screen.dart';
 
@@ -17,15 +18,25 @@ class _MainScreenState extends State<MainScreen> {
 
   void _onNavigateToSchedule() {
     setState(() {
-      _currentIndex = 2; // Index for ScheduleScreen
+      _currentIndex = 3; // Adjusted index (Home:0, Destinasi:1, Rekomendasi:2, Jadwal:3, Profile:4)
+    });
+  }
+
+  void _onNavigateToRecommendation() {
+    setState(() {
+      _currentIndex = 2; // Index for RecommendationScreen
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final List<Widget> screens = [
-      HomeScreen(onSeeAllSchedule: _onNavigateToSchedule),
+      HomeScreen(
+        onSeeAllSchedule: _onNavigateToSchedule,
+        onGoToRecommendation: _onNavigateToRecommendation,
+      ),
       const DestinationListScreen(),
+      const RecommendationScreen(),
       const ScheduleScreen(),
       const ProfileScreen(),
     ];
@@ -39,8 +50,8 @@ class _MainScreenState extends State<MainScreen> {
         backgroundColor: Colors.white,
         selectedItemColor: AppTheme.navBlue,
         unselectedItemColor: AppTheme.navUnselected,
-        selectedLabelStyle: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600),
-        unselectedLabelStyle: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500),
+        selectedLabelStyle: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w500),
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_rounded),
@@ -49,6 +60,10 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.explore_outlined),
             label: 'Destinasi',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.auto_awesome_rounded),
+            label: 'Rekomendasi',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today_rounded),

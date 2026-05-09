@@ -7,10 +7,12 @@ import 'services/auth_service.dart';
 import 'services/content_service.dart';
 import 'services/event_service.dart';
 import 'services/submission_service.dart';
+import 'services/recommendation_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/content_provider.dart';
 import 'providers/event_provider.dart';
 import 'providers/submission_provider.dart';
+import 'providers/recommendation_provider.dart';
 import 'core/services/cache_service.dart';
 import 'screens/auth/auth_wrapper.dart';
 
@@ -24,6 +26,7 @@ Future<void> main() async {
   final contentService = ContentService(dioClient);
   final eventService = EventService(dioClient);
   final submissionService = SubmissionService(dioClient);
+  final recommendationService = RecommendationService(dioClient);
 
   runApp(
     MultiProvider(
@@ -39,6 +42,9 @@ Future<void> main() async {
         ),
         ChangeNotifierProvider(
           create: (_) => SubmissionProvider(submissionService, dioClient),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => RecommendationProvider(recommendationService),
         ),
       ],
       child: const BludApp(),

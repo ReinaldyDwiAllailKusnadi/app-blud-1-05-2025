@@ -10,7 +10,14 @@ import '../auth/login_screen.dart';
 import '../../core/widgets/pressable.dart';
 
 class SubmissionFormScreen extends StatefulWidget {
-  const SubmissionFormScreen({super.key});
+  final String? prefilledLocation;
+  final DateTime? prefilledDate;
+
+  const SubmissionFormScreen({
+    super.key,
+    this.prefilledLocation,
+    this.prefilledDate,
+  });
 
   @override
   State<SubmissionFormScreen> createState() => _SubmissionFormScreenState();
@@ -40,6 +47,9 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedLocation = widget.prefilledLocation;
+    _startDate = widget.prefilledDate;
+    
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<SubmissionProvider>().fetchLocationOptions();
     });

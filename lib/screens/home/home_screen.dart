@@ -14,7 +14,8 @@ import '../../core/theme/app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback? onSeeAllSchedule;
-  const HomeScreen({super.key, this.onSeeAllSchedule});
+  final VoidCallback? onGoToRecommendation;
+  const HomeScreen({super.key, this.onSeeAllSchedule, this.onGoToRecommendation});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -88,9 +89,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         // ── Blue Gradient Header ──
                         _buildHeader(context),
 
+                        // ── Recommendation Shortcut ──
+                        _buildRecommendationShortcut(context),
+
                         // ── Destination Cards (Overlapping) ──
                         Transform.translate(
-                          offset: const Offset(0, -88),
+                          offset: const Offset(0, -100),
                           child: _buildDestinationSection(contentProv),
                         ),
 
@@ -107,6 +111,84 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildRecommendationShortcut(BuildContext context) {
+    return Transform.translate(
+      offset: const Offset(0, -115),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
+            border: Border.all(color: Colors.white, width: 2),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.auto_awesome, color: AppTheme.accentColor, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Bingung memilih lokasi?',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Gunakan fitur rekomendasi untuk menemukan lokasi sewa yang sesuai dengan kebutuhan kegiatan Anda.',
+                      style: GoogleFonts.inter(
+                        fontSize: 12.5,
+                        color: AppTheme.textSecondary,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Pressable(
+                      onTap: widget.onGoToRecommendation,
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppTheme.navBlue,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          'Mulai Rekomendasi',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
