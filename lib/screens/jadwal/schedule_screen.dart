@@ -10,6 +10,8 @@ import '../../core/widgets/app_layout.dart';
 import '../../core/widgets/app_buttons.dart';
 import '../../core/widgets/app_states.dart';
 
+import '../../core/widgets/main_tab_header.dart';
+
 // Schedule Screen - Updated: 2026-05-07 20:02 (Force Rebuild)
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
@@ -61,7 +63,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           // ── Main Content Area ──
           Column(
             children: [
-              const AppGradientHeader(title: 'Jadwal & Sewa Lokasi'),
+              const MainTabHeader(title: 'Jadwal & Sewa Lokasi'),
               Expanded(
                 child: Consumer<EventProvider>(
                   builder: (context, prov, _) {
@@ -69,15 +71,15 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       onRefresh: () => prov.fetchJadwal(),
                       child: SingleChildScrollView(
                         physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.only(bottom: 160),
+                        padding: const EdgeInsets.only(bottom: 140),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // Section 1: Jadwal Terisi
                               const AppSectionTitle(title: 'Jadwal Terisi'),
-                              const SizedBox(height: 20),
+                              const SizedBox(height: 16),
                               
                               if (prov.isLoading && prov.events.isEmpty)
                                 Column(
@@ -113,13 +115,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                   },
                                 ),
 
-                              const SizedBox(height: 40),
+                              const SizedBox(height: 32),
                               const Divider(),
                               const SizedBox(height: 32),
 
                               // Section 2: Aturan & Alur Penyewaan
                               const AppSectionTitle(title: 'Aturan & Alur Penyewaan'),
-                              const SizedBox(height: 24),
+                              const SizedBox(height: 16),
                               const _RentalStepTimeline(),
                             ],
                           ),
@@ -304,7 +306,7 @@ class _RentalStepTimeline extends StatelessWidget {
               const SizedBox(width: 16),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(bottom: 24),
+                  padding: const EdgeInsets.only(bottom: 20),
                   child: Text(
                     steps[index],
                     style: const TextStyle(

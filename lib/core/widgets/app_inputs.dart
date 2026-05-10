@@ -102,6 +102,7 @@ class AppDropdownField extends StatelessWidget {
   final Function(String?) onChanged;
   final IconData icon;
   final String? Function(String?)? validator;
+  final String? hint;
 
   const AppDropdownField({
     super.key,
@@ -111,6 +112,7 @@ class AppDropdownField extends StatelessWidget {
     required this.onChanged,
     required this.icon,
     this.validator,
+    this.hint,
   });
 
   @override
@@ -132,6 +134,7 @@ class AppDropdownField extends StatelessWidget {
         DropdownButtonFormField<String>(
           initialValue: value,
           isExpanded: true,
+          hint: hint != null ? Text(hint!, style: GoogleFonts.inter(color: AppTheme.textLight, fontWeight: FontWeight.w400)) : null,
           icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppTheme.textSecondary),
           style: GoogleFonts.inter(
             fontSize: 15,

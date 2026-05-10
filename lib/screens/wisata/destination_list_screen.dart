@@ -3,8 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../providers/content_provider.dart';
-import '../../core/theme/app_theme.dart';
 import '../../core/widgets/skeleton.dart';
+import '../../core/widgets/main_tab_header.dart';
 import 'destination_detail_screen.dart';
 
 class DestinationListScreen extends StatefulWidget {
@@ -38,9 +38,8 @@ class _DestinationListScreenState extends State<DestinationListScreen> {
           // ── Main Content Area ──
           Column(
             children: [
-              _GradientHeader(
+              const MainTabHeader(
                 title: 'Objek Wisata Banyumas',
-                onBack: () => Navigator.pop(context),
               ),
               Expanded(
                 child: Consumer<ContentProvider>(
@@ -100,52 +99,6 @@ class _DestinationListScreenState extends State<DestinationListScreen> {
   }
 }
 
-
-// ═══════════════════════════════════════════════════════════
-// Gradient Header Widget
-// ═══════════════════════════════════════════════════════════
-class _GradientHeader extends StatelessWidget {
-  final String title;
-  final VoidCallback onBack;
-
-  const _GradientHeader({required this.title, required this.onBack});
-
-  @override
-  Widget build(BuildContext context) {
-    final topPadding = MediaQuery.of(context).padding.top;
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(10, topPadding, 10, 0),
-      height: topPadding + 64,
-      decoration: BoxDecoration(
-        gradient: AppTheme.blueHeaderGradient,
-      ),
-      child: Stack(
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: IconButton(
-              icon: const Icon(Icons.chevron_left_rounded, color: Colors.white, size: 32),
-              onPressed: onBack,
-            ),
-          ),
-          Align(
-            alignment: Alignment.center,
-            child: Text(
-              title,
-              style: GoogleFonts.inter(
-                fontSize: 19,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 // ═══════════════════════════════════════════════════════════
 // Destination Card Widget

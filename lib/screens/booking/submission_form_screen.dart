@@ -11,11 +11,15 @@ import '../../core/widgets/pressable.dart';
 
 class SubmissionFormScreen extends StatefulWidget {
   final String? prefilledLocation;
+  final int? prefilledLocationId;
+  final String? prefilledLocationSlug;
   final DateTime? prefilledDate;
 
   const SubmissionFormScreen({
     super.key,
     this.prefilledLocation,
+    this.prefilledLocationId,
+    this.prefilledLocationSlug,
     this.prefilledDate,
   });
 
@@ -563,7 +567,7 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
           child: Text(label, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
         ),
         DropdownButtonFormField<String>(
-          initialValue: value,
+          value: items.contains(value) ? value : null,
           isExpanded: true,
           icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
           style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),

@@ -261,8 +261,8 @@ class ProfileScreen extends StatelessWidget {
         Text(
           'Profil Saya',
           style: GoogleFonts.inter(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
+            fontSize: 19,
+            fontWeight: FontWeight.w700,
             color: Colors.white,
             letterSpacing: 0.5,
           ),
@@ -337,23 +337,13 @@ class ProfileScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Informasi Profil',
-                style: GoogleFonts.inter(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF1E293B),
-                ),
-              ),
-              IconButton(
-                onPressed: () => _showEditBottomSheet(context, user),
-                icon: const Icon(Icons.edit_note_rounded, color: Color(0xFF1461D2), size: 28),
-                visualDensity: VisualDensity.compact,
-              ),
-            ],
+          Text(
+            'Informasi Profil',
+            style: GoogleFonts.inter(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF1E293B),
+            ),
           ),
           const SizedBox(height: 24),
           Wrap(
@@ -388,14 +378,14 @@ class ProfileScreen extends StatelessWidget {
                         surfaceTintColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                         title: Text(
-                          'Keluar',
+                          'Keluar Akun?',
                           style: GoogleFonts.inter(
                             fontWeight: FontWeight.w800,
                             color: const Color(0xFF1E293B),
                           ),
                         ),
                         content: Text(
-                          'Apakah Anda yakin ingin keluar dari akun?',
+                          'Apakah Anda yakin ingin keluar dari akun ini?',
                           style: GoogleFonts.inter(
                             color: const Color(0xFF64748B),
                             fontSize: 15,
@@ -465,6 +455,8 @@ class ProfileScreen extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             value.isNotEmpty ? value : '-',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: GoogleFonts.inter(
               fontSize: 16,
               fontWeight: FontWeight.w700,

@@ -5,8 +5,9 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/recommendation_provider.dart';
 import '../../models/recommendation_model.dart';
-import '../../core/widgets/app_inputs.dart'; // Assuming it has some input styles
+import '../../core/widgets/app_inputs.dart';
 import '../booking/submission_form_screen.dart';
+import '../../core/widgets/main_tab_header.dart';
 
 class RecommendationScreen extends StatefulWidget {
   const RecommendationScreen({super.key});
@@ -103,80 +104,93 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Rekomendasi Lokasi'),
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-        elevation: 0,
-      ),
-      body: SafeArea(
-        child: Consumer<RecommendationProvider>(
-          builder: (context, provider, child) {
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildFormCard(),
-                  const SizedBox(height: 24),
-                  if (provider.isLoading)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 40),
-                        child: CircularProgressIndicator(),
-                      ),
-                    )
-                  else if (provider.errorMessage != null)
-                    _buildErrorState(provider.errorMessage!)
-                  else if (provider.recommendations.isNotEmpty)
-                    _buildResultsList(provider.recommendations)
-                  else
-                    _buildEmptyState(),
-                ],
-              ),
-            );
-          },
-        ),
+      backgroundColor: const Color(0xFFF8F9FA),
+      body: Column(
+        children: [
+          const MainTabHeader(title: 'Rekomendasi Lokasi'),
+          Expanded(
+            child: Consumer<RecommendationProvider>(
+              builder: (context, provider, child) {
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildFormCard(),
+                      const SizedBox(height: 24),
+                      if (provider.isLoading)
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 40),
+                            child: CircularProgressIndicator(),
+                          ),
+                        )
+                      else if (provider.errorMessage != null)
+                        _buildErrorState(provider.errorMessage!)
+                      else if (provider.recommendations.isNotEmpty)
+                        _buildResultsList(provider.recommendations)
+                      else
+                        _buildEmptyState(),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildFormCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
           ),
         ],
+        border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
       ),
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Cari Lokasi Sesuai Kebutuhan',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
-              ),
+            Row(
+              children: [
+                const Icon(Icons.tune_rounded, color: AppTheme.navBlue, size: 22),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Cari Lokasi Sesuai Kebutuhan',
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.textPrimary,
+                      letterSpacing: -0.3,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
               'Lengkapi informasi kegiatan Anda untuk mendapatkan rekomendasi terbaik.',
               style: GoogleFonts.inter(
-                fontSize: 13,
+                fontSize: 13.5,
                 color: AppTheme.textSecondary,
+                height: 1.4,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             
             AppTextField(
               label: 'Jenis Kegiatan',
@@ -184,7 +198,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
               hint: 'Contoh: seminar, bazar, outbound',
               icon: Icons.event_available_rounded,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
 
             AppTextField(
               label: 'Jumlah Peserta',
@@ -193,7 +207,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
               hint: 'Contoh: 150',
               icon: Icons.groups_outlined,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
 
             AppDateField(
               label: 'Tanggal Kegiatan *',
@@ -201,7 +215,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
               onTap: () => _selectDate(context),
               icon: Icons.calendar_month_rounded,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
 
             AppTextField(
               label: 'Budget (Rp)',
@@ -210,7 +224,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
               hint: 'Contoh: 2000000',
               icon: Icons.payments_outlined,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
 
             AppTextField(
               label: 'Fasilitas Dibutuhkan',
@@ -218,12 +232,13 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
               hint: 'Contoh: aula, kursi, sound system',
               icon: Icons.check_circle_outline_rounded,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
 
             AppDropdownField(
               label: 'Preferensi Lokasi',
               value: _selectedPreference,
               items: const ['indoor', 'outdoor'],
+              hint: 'Pilih Preferensi Lokasi',
               icon: Icons.category_outlined,
               onChanged: (val) => setState(() => _selectedPreference = val),
             ),
@@ -235,9 +250,20 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                 onPressed: _handleSearch,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.navBlue,
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 0,
                 ),
-                child: const Text('Cari Rekomendasi'),
+                child: Text(
+                  'Cari Rekomendasi',
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ),
           ],
@@ -254,12 +280,16 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
           children: [
             const Icon(Icons.auto_awesome, color: AppTheme.accentColor, size: 20),
             const SizedBox(width: 8),
-            Text(
-              'Hasil Rekomendasi',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
+            Expanded(
+              child: Text(
+                'Hasil Rekomendasi',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -310,6 +340,8 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                           fontWeight: FontWeight.w700,
                           color: AppTheme.textPrimary,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Container(
@@ -458,16 +490,28 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: AppTheme.textSecondary),
-          const SizedBox(width: 10),
-          Text(
-            '$label: ',
-            style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textSecondary),
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Icon(icon, size: 16, color: AppTheme.textSecondary),
           ),
-          Text(
-            value,
-            style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textSecondary),
+                children: [
+                  TextSpan(text: '$label: '),
+                  TextSpan(
+                    text: value,
+                    style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                  ),
+                ],
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),

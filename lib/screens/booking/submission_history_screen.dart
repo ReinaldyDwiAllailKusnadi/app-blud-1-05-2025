@@ -4,10 +4,11 @@ import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/submission_provider.dart';
 import '../auth/login_screen.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../core/widgets/app_layout.dart';
 import '../../core/widgets/app_states.dart';
 import '../../core/widgets/app_buttons.dart';
+import '../../services/submission_download_service.dart';
+import 'package:open_filex/open_filex.dart';
 
 class SubmissionHistoryScreen extends StatefulWidget {
   const SubmissionHistoryScreen({super.key});
@@ -16,6 +17,9 @@ class SubmissionHistoryScreen extends StatefulWidget {
 }
 
 class _SubmissionHistoryScreenState extends State<SubmissionHistoryScreen> {
+  final SubmissionDownloadService _downloadService = SubmissionDownloadService();
+  final Map<String, bool> _downloading = {};
+
   @override
   void initState() {
     super.initState();
@@ -150,10 +154,10 @@ class _SubmissionHistoryScreenState extends State<SubmissionHistoryScreen> {
                     spacing: 10,
                     runSpacing: 10,
                     children: [
-                      if (item.fileUrl != null) _docButton('Proposal', item.fileUrl!),
-                      if (item.ktpUrl != null) _docButton('KTP', item.ktpUrl!),
-                      if (item.applLetterUrl != null) _docButton('Surat Pengajuan', item.applLetterUrl!),
-                      if (item.actvLetterUrl != null) _docButton('Surat Kegiatan', item.actvLetterUrl!),
+                      if (item.file != null) _docButton('Proposal', 'proposal', item.id, 'proposal-${item.id}.pdf'),
+                      if (item.ktp != null) _docButton('KTP', 'ktp', item.id, 'ktp-${item.id}.pdf'),
+                      if (item.applLetter != null) _docButton('Surat Pengajuan', 'appl_letter', item.id, 'surat-pengajuan-${item.id}.pdf'),
+                      if (item.actvLetter != null) _docButton('Surat Kegiatan', 'actv_letter', item.id, 'surat-kegiatan-${item.id}.pdf'),
                     ],
                   ),
                 ],
@@ -179,9 +183,12 @@ class _SubmissionHistoryScreenState extends State<SubmissionHistoryScreen> {
     );
   }
 
-  Widget _docButton(String label, String url) {
+  Widget _docButton(String label, String type, int submissionId, String filename) {
+    final key = '$submissionId-$type';
+    final isLoading = _downloading[key] ?? false;
+
     return InkWell(
-      onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+      onTap: isLoading ? null : () => _handleDownload(submissionId, type, filename),
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -193,12 +200,62 @@ class _SubmissionHistoryScreenState extends State<SubmissionHistoryScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.picture_as_pdf_rounded, size: 14, color: AppTheme.errorColor),
+            if (isLoading)
+              const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.errorColor),
+              )
+            else
+              const Icon(Icons.picture_as_pdf_rounded, size: 14, color: AppTheme.errorColor),
             const SizedBox(width: 6),
             Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _handleDownload(int submissionId, String type, String filename) async {
+    final key = '$submissionId-$type';
+
+    setState(() => _downloading[key] = true);
+
+    try {
+      final file = await _downloadService.downloadSubmissionAttachment(
+        submissionId: submissionId,
+        type: type,
+        filename: filename,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('File berhasil diunduh: $filename'),
+          backgroundColor: Colors.green,
+          action: SnackBarAction(
+            label: 'BUKA',
+            textColor: Colors.white,
+            onPressed: () => OpenFilex.open(file.path),
+          ),
+        ),
+      );
+
+      // Auto open
+      await OpenFilex.open(file.path);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _downloading.remove(key));
+      }
+    }
   }
 }

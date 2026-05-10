@@ -3,8 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:intl/intl.dart';
 import '../../providers/content_provider.dart';
 import '../../models/content_model.dart';
+import '../booking/submission_form_screen.dart';
 
 class DestinationDetailScreen extends StatefulWidget {
   final String slug;
@@ -31,6 +33,22 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
         _detail = result;
         _isInitLoading = false;
       });
+    }
+  }
+
+  String _formatCurrency(String? price) {
+    if (price == null || price.isEmpty || price == '-') return '-';
+    try {
+      final cleanPrice = price.replaceAll(RegExp(r'[^0-9]'), '');
+      if (cleanPrice.isEmpty) return '-';
+      final value = int.parse(cleanPrice);
+      return NumberFormat.currency(
+        locale: 'id_ID',
+        symbol: 'Rp',
+        decimalDigits: 0,
+      ).format(value).replaceAll(',', '.');
+    } catch (e) {
+      return price;
     }
   }
 
@@ -80,7 +98,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
             bottom: 0,
             left: 0,
             right: 0,
-            child: _BottomCtaBar(whatsapp: dest.whatsapp),
+            child: _BottomCtaBar(dest: dest),
           ),
         ],
       ),
@@ -174,6 +192,8 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
               color: const Color(0xFF0F172A),
               letterSpacing: -0.5,
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 24),
 
@@ -197,7 +217,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
               _buildInfoItem(
                 icon: Icons.payments_rounded,
                 label: 'Mulai dari',
-                value: 'Rp ${dest.priceWeekday ?? '25.000'}',
+                value: _formatCurrency(dest.priceWeekday),
                 width: (MediaQuery.of(context).size.width - 60) / 2,
               ),
             ],
@@ -434,25 +454,8 @@ class _MapPreview extends StatelessWidget {
 }
 
 class _BottomCtaBar extends StatelessWidget {
-  final String? whatsapp;
-  const _BottomCtaBar({this.whatsapp});
-
-  Future<void> _launchWhatsApp() async {
-    if (whatsapp == null || whatsapp!.isEmpty) return;
-    
-    // Format number: ensure it starts with 62
-    String phone = whatsapp!.replaceAll(RegExp(r'[^0-9]'), '');
-    if (phone.startsWith('0')) {
-      phone = '62${phone.substring(1)}';
-    } else if (phone.startsWith('8')) {
-      phone = '62$phone';
-    }
-
-    final url = Uri.parse("https://wa.me/$phone");
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      debugPrint("Could not launch WhatsApp");
-    }
-  }
+  final ContentModel dest;
+  const _BottomCtaBar({required this.dest});
 
   @override
   Widget build(BuildContext context) {
@@ -471,57 +474,45 @@ class _BottomCtaBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // WhatsApp Button (Only show if whatsapp available)
-          if (whatsapp != null && whatsapp!.isNotEmpty)
-            Expanded(
-              flex: 45,
-              child: GestureDetector(
-                onTap: _launchWhatsApp,
-                child: Container(
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF16A34A),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.chat_bubble_rounded, color: Colors.white, size: 20),
-                      SizedBox(width: 8),
-                      Text(
-                        'WhatsApp',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          if (whatsapp != null && whatsapp!.isNotEmpty) const SizedBox(width: 12),
           // Booking Button
           Expanded(
-            flex: 55,
             child: GestureDetector(
               onTap: () {
-                // TODO: Navigate to Booking Form
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => SubmissionFormScreen(
+                      prefilledLocation: dest.name,
+                      prefilledLocationId: dest.id,
+                      prefilledLocationSlug: dest.slug,
+                    ),
+                  ),
+                );
               },
               child: Container(
-                height: 56,
+                height: 58,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF0F4EA3), Color(0xFF08C6D9)],
+                    colors: [Color(0xFF20A8F4), Color(0xFF142B9A)],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF142B9A).withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
                 child: const Center(
                   child: Text(
-                    'Pesan Tiket',
+                    'Booking Sekarang',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
                       letterSpacing: 0.5,
                     ),
                   ),
