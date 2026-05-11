@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/event_provider.dart';
 import '../booking/submission_form_screen.dart';
 import '../../core/widgets/skeleton.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_layout.dart';
 import '../../core/widgets/app_buttons.dart';
@@ -56,92 +56,99 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      body: Stack(
-        children: [
-          // ── Main Content Area ──
-          Column(
-            children: [
-              const MainTabHeader(title: 'Jadwal & Sewa Lokasi'),
-              Expanded(
-                child: Consumer<EventProvider>(
-                  builder: (context, prov, _) {
-                    return RefreshIndicator(
-                      onRefresh: () => prov.fetchJadwal(),
-                      child: SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.only(bottom: 140),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Section 1: Jadwal Terisi
-                              const AppSectionTitle(title: 'Jadwal Terisi'),
-                              const SizedBox(height: 16),
-                              
-                              if (prov.isLoading && prov.events.isEmpty)
-                                Column(
-                                  children: List.generate(3, (index) => const Padding(
-                                    padding: EdgeInsets.only(bottom: 16),
-                                    child: Skeleton(width: double.infinity, height: 100, borderRadius: BorderRadius.all(Radius.circular(AppTheme.radiusLg))),
-                                  )),
-                                )
-                              else if (prov.events.isEmpty)
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 40),
-                                  child: AppEmptyState(
-                                    title: 'Belum Ada Jadwal', 
-                                    subtitle: 'Seluruh lokasi masih tersedia untuk disewa.',
-                                    icon: Icons.calendar_today_rounded,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: AppTheme.backgroundColor,
+        body: Stack(
+          children: [
+            // ── Main Content Area ──
+            Column(
+              children: [
+                const MainTabHeader(title: 'Jadwal & Sewa Lokasi'),
+                Expanded(
+                  child: Consumer<EventProvider>(
+                    builder: (context, prov, _) {
+                      return RefreshIndicator(
+                        onRefresh: () => prov.fetchJadwal(),
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.only(bottom: 140),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Section 1: Jadwal Terisi
+                                const AppSectionTitle(title: 'Jadwal Terisi'),
+                                const SizedBox(height: 16),
+                                
+                                if (prov.isLoading && prov.events.isEmpty)
+                                  Column(
+                                    children: List.generate(3, (index) => const Padding(
+                                      padding: EdgeInsets.only(bottom: 16),
+                                      child: Skeleton(width: double.infinity, height: 100, borderRadius: BorderRadius.all(Radius.circular(AppTheme.radiusLg))),
+                                    )),
+                                  )
+                                else if (prov.events.isEmpty)
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 40),
+                                    child: AppEmptyState(
+                                      title: 'Belum Ada Jadwal', 
+                                      subtitle: 'Seluruh lokasi masih tersedia untuk disewa.',
+                                      icon: Icons.calendar_today_rounded,
+                                    ),
+                                  )
+                                else
+                                  ListView.separated(
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    itemCount: prov.events.length,
+                                    separatorBuilder: (_, __) => const SizedBox(height: 16),
+                                    itemBuilder: (context, index) {
+                                      final event = prov.events[index];
+                                      return _FilledScheduleCard(
+                                        title: event.nameEvent,
+                                        vendor: event.vendor ?? '-',
+                                        location: event.location ?? '-',
+                                        dateRange: _formatDateRange(event.startDate, event.endDate),
+                                        fileUrl: event.fileUrl,
+                                      );
+                                    },
                                   ),
-                                )
-                              else
-                                ListView.separated(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: prov.events.length,
-                                  separatorBuilder: (_, __) => const SizedBox(height: 16),
-                                  itemBuilder: (context, index) {
-                                    final event = prov.events[index];
-                                    return _FilledScheduleCard(
-                                      title: event.nameEvent,
-                                      vendor: event.vendor ?? '-',
-                                      location: event.location ?? '-',
-                                      dateRange: _formatDateRange(event.startDate, event.endDate),
-                                      fileUrl: event.fileUrl,
-                                    );
-                                  },
-                                ),
-
-                              const SizedBox(height: 32),
-                              const Divider(),
-                              const SizedBox(height: 32),
-
-                              // Section 2: Aturan & Alur Penyewaan
-                              const AppSectionTitle(title: 'Aturan & Alur Penyewaan'),
-                              const SizedBox(height: 16),
-                              const _RentalStepTimeline(),
-                            ],
+  
+                                const SizedBox(height: 32),
+                                const Divider(),
+                                const SizedBox(height: 32),
+  
+                                // Section 2: Aturan & Alur Penyewaan
+                                const AppSectionTitle(title: 'Aturan & Alur Penyewaan'),
+                                const SizedBox(height: 16),
+                                const _RentalStepTimeline(),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
-          ),
-          
-          // Sticky Bottom Button
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: _StickyRentButton(),
-          ),
-        ],
+              ],
+            ),
+            
+            // Sticky Bottom Button
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: _StickyRentButton(),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -229,23 +236,6 @@ class _FilledScheduleCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                if (fileUrl != null && fileUrl!.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: 38,
-                    child: AppSecondaryButton(
-                      text: 'Lihat Rundown',
-                      height: 38,
-                      icon: Icons.description_outlined,
-                      onTap: () async {
-                        final uri = Uri.parse(fileUrl!);
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(uri, mode: LaunchMode.externalApplication);
-                        }
-                      },
-                    ),
-                  ),
-                ],
               ],
             ),
           ),

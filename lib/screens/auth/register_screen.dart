@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'login_screen.dart';
@@ -58,6 +59,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (name.isEmpty || email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Nama, Email, dan Password wajib diisi.')),
+      );
+      return;
+    }
+
+    // Phone Validation (if provided)
+    if (phone.isNotEmpty && (phone.length < 10 || phone.length > 12)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nomor HP minimal 10 digit dan maksimal 12 digit.')),
       );
       return;
     }
@@ -203,7 +212,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     _RegisterTextField(
                       controller: _phoneCtrl,
                       hintText: 'Nomor WhatsApp',
-                      keyboardType: TextInputType.phone,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(12),
+                      ],
                     ),
 
                     const SizedBox(height: 18),
@@ -297,12 +310,14 @@ class _RegisterTextField extends StatelessWidget {
   final String hintText;
   final bool obscureText;
   final TextInputType keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
 
   const _RegisterTextField({
     required this.controller,
     required this.hintText,
     this.obscureText = false,
     this.keyboardType = TextInputType.text,
+    this.inputFormatters,
   });
 
   @override
@@ -321,6 +336,7 @@ class _RegisterTextField extends StatelessWidget {
             controller: controller,
             obscureText: obscureText,
             keyboardType: keyboardType,
+            inputFormatters: inputFormatters,
             style: GoogleFonts.inter(
               fontSize: 15,
               fontWeight: FontWeight.w400,

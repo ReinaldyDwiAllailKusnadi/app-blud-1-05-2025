@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -31,69 +32,76 @@ class _DestinationListScreenState extends State<DestinationListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      body: Stack(
-        children: [
-          // ── Main Content Area ──
-          Column(
-            children: [
-              const MainTabHeader(
-                title: 'Objek Wisata Banyumas',
-              ),
-              Expanded(
-                child: Consumer<ContentProvider>(
-                  builder: (context, prov, _) {
-                    if (prov.isLoading && prov.contents.isEmpty) {
-                      return ListView.separated(
-                        padding: const EdgeInsets.only(top: 24, bottom: 40),
-                        itemCount: 5,
-                        separatorBuilder: (_, __) => const SizedBox(height: 20),
-                        itemBuilder: (_, __) => const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Skeleton(width: double.infinity, height: 220, borderRadius: BorderRadius.all(Radius.circular(24))),
-                              SizedBox(height: 12),
-                              Skeleton(width: 200, height: 24),
-                              SizedBox(height: 8),
-                              Skeleton(width: 150, height: 16),
-                            ],
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        body: Stack(
+          children: [
+            // ── Main Content Area ──
+            Column(
+              children: [
+                const MainTabHeader(
+                  title: 'Objek Wisata Banyumas',
+                ),
+                Expanded(
+                  child: Consumer<ContentProvider>(
+                    builder: (context, prov, _) {
+                      if (prov.isLoading && prov.contents.isEmpty) {
+                        return ListView.separated(
+                          padding: const EdgeInsets.only(top: 24, bottom: 40),
+                          itemCount: 5,
+                          separatorBuilder: (_, __) => const SizedBox(height: 20),
+                          itemBuilder: (_, __) => const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Skeleton(width: double.infinity, height: 220, borderRadius: BorderRadius.all(Radius.circular(24))),
+                                SizedBox(height: 12),
+                                Skeleton(width: 200, height: 24),
+                                SizedBox(height: 8),
+                                Skeleton(width: 150, height: 16),
+                              ],
+                            ),
                           ),
+                        );
+                      }
+  
+                      if (prov.contents.isEmpty) {
+                        return const Center(child: Text('Tidak ada destinasi ditemukan'));
+                      }
+  
+                      return RefreshIndicator(
+                        onRefresh: () => prov.fetchAllWisata(),
+                        child: ListView.separated(
+                          padding: const EdgeInsets.only(top: 24, bottom: 40),
+                          itemCount: prov.contents.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 20),
+                          itemBuilder: (context, index) {
+                            final dest = prov.contents[index];
+                            return _DestinationListCard(
+                              title: dest.name,
+                              description: dest.description ?? '',
+                              location: _shortLocation(dest.location ?? 'Purwokerto'),
+                              imageUrl: dest.imageUrl ?? '',
+                              slug: dest.slug,
+                            );
+                          },
                         ),
                       );
-                    }
-
-                    if (prov.contents.isEmpty) {
-                      return const Center(child: Text('Tidak ada destinasi ditemukan'));
-                    }
-
-                    return RefreshIndicator(
-                      onRefresh: () => prov.fetchAllWisata(),
-                      child: ListView.separated(
-                        padding: const EdgeInsets.only(top: 24, bottom: 40),
-                        itemCount: prov.contents.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 20),
-                        itemBuilder: (context, index) {
-                          final dest = prov.contents[index];
-                          return _DestinationListCard(
-                            title: dest.name,
-                            description: dest.description ?? '',
-                            location: _shortLocation(dest.location ?? 'Purwokerto'),
-                            imageUrl: dest.imageUrl ?? '',
-                            slug: dest.slug,
-                          );
-                        },
-                      ),
-                    );
-                  },
+                    },
+                  ),
                 ),
-              ),
-            ],
-          ),
-
-        ],
+              ],
+            ),
+  
+          ],
+        ),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
@@ -15,6 +16,7 @@ class AppTextField extends StatelessWidget {
   final bool readOnly;
   final int maxLines;
   final bool enabled;
+  final List<TextInputFormatter>? inputFormatters;
 
   const AppTextField({
     super.key,
@@ -30,6 +32,7 @@ class AppTextField extends StatelessWidget {
     this.readOnly = false,
     this.maxLines = 1,
     this.enabled = true,
+    this.inputFormatters,
   }) : hintText = hintText ?? hint;
 
   @override
@@ -52,6 +55,7 @@ class AppTextField extends StatelessWidget {
           controller: controller,
           obscureText: obscureText,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
           readOnly: readOnly,
           onTap: onTap,
           validator: validator,

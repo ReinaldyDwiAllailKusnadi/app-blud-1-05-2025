@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -70,21 +71,30 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
   }
 
   Future<void> _pickFile(String type) async {
-    List<String> extensions = ['pdf'];
-    if (type == 'ktp') extensions = ['pdf', 'jpg', 'jpeg', 'png'];
-
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: extensions,
+      allowedExtensions: ['pdf'],
     );
 
     if (result != null) {
+      final file = result.files.first;
+      
+      // Additional validation for KTP
+      if (type == 'ktp' && file.extension?.toLowerCase() != 'pdf') {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('File KTP harus berformat PDF.')),
+          );
+        }
+        return;
+      }
+
       setState(() {
         switch (type) {
-          case 'file': _file = result.files.first; break;
-          case 'ktp': _ktp = result.files.first; break;
-          case 'appl_letter': _applLetter = result.files.first; break;
-          case 'actv_letter': _actvLetter = result.files.first; break;
+          case 'file': _file = file; break;
+          case 'ktp': _ktp = file; break;
+          case 'appl_letter': _applLetter = file; break;
+          case 'actv_letter': _actvLetter = file; break;
         }
       });
     }
@@ -132,9 +142,18 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
       return;
     }
 
-    if (_ktp == null) {
+    // Phone Number Validation (10-12 digits)
+    final phone = _noHpCtrl.text.trim();
+    if (phone.length < 10 || phone.length > 12) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('File KTP wajib diunggah.')),
+        const SnackBar(content: Text('Nomor HP minimal 10 digit dan maksimal 12 digit.')),
+      );
+      return;
+    }
+
+    if (_file == null || _ktp == null || _applLetter == null || _actvLetter == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Semua dokumen wajib diunggah dalam format PDF.')),
       );
       return;
     }
@@ -345,7 +364,11 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
                                 controller: _noHpCtrl,
                                 icon: Icons.phone_android_rounded,
                                 hint: 'Contoh: 08123456789',
-                                keyboardType: TextInputType.phone,
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                  LengthLimitingTextInputFormatter(12),
+                                ],
                               ),
                               const SizedBox(height: 16),
                               _buildField(
@@ -436,30 +459,33 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Pastikan file terbaca dengan jelas (PDF/Gambar)',
+                                'Semua dokumen wajib berformat PDF (maks 2MB per file)',
                                 style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
                               ),
                               const SizedBox(height: 20),
                               _buildFilePicker(
-                                label: 'File KTP (Wajib)',
+                                label: 'Scan KTP (PDF)',
                                 file: _ktp,
                                 onPick: () => _pickFile('ktp'),
                                 isRequired: true,
                               ),
                               _buildFilePicker(
-                                label: 'File Proposal (PDF)',
+                                label: 'File Proposal (Wajib PDF)',
                                 file: _file,
                                 onPick: () => _pickFile('file'),
+                                isRequired: true,
                               ),
                               _buildFilePicker(
-                                label: 'Surat Pengajuan (PDF)',
+                                label: 'Surat Pengajuan (Wajib PDF)',
                                 file: _applLetter,
                                 onPick: () => _pickFile('appl_letter'),
+                                isRequired: true,
                               ),
                               _buildFilePicker(
-                                label: 'Surat Rundown / Kegiatan (PDF)',
+                                label: 'Surat Rundown / Kegiatan (Wajib PDF)',
                                 file: _actvLetter,
                                 onPick: () => _pickFile('actv_letter'),
+                                isRequired: true,
                               ),
 
                               const SizedBox(height: 40),
@@ -523,6 +549,7 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
     required IconData icon,
     String? hint,
     TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -534,6 +561,7 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
           style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
           decoration: InputDecoration(
             hintText: hint,
@@ -693,7 +721,7 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
                       )
                     else
                       Text(
-                        isRequired ? 'Wajib (Format PDF/JPG/PNG)' : 'Opsional (Format PDF)',
+                        isRequired ? 'Wajib (Format PDF)' : 'Opsional (Format PDF)',
                         style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF94A3B8)),
                       ),
                   ],

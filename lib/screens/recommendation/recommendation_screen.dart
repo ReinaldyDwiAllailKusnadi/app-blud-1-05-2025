@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -71,7 +72,10 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
     }
 
     final participants = int.tryParse(_participantsController.text);
-    final budget = double.tryParse(_budgetController.text);
+    
+    // Clean budget string from dots before parsing
+    final cleanBudget = _budgetController.text.replaceAll('.', '');
+    final budget = double.tryParse(cleanBudget);
     
     List<String>? facilities;
     if (_facilitiesController.text.isNotEmpty) {
@@ -103,41 +107,48 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      body: Column(
-        children: [
-          const MainTabHeader(title: 'Rekomendasi Lokasi'),
-          Expanded(
-            child: Consumer<RecommendationProvider>(
-              builder: (context, provider, child) {
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildFormCard(),
-                      const SizedBox(height: 24),
-                      if (provider.isLoading)
-                        const Center(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(vertical: 40),
-                            child: CircularProgressIndicator(),
-                          ),
-                        )
-                      else if (provider.errorMessage != null)
-                        _buildErrorState(provider.errorMessage!)
-                      else if (provider.recommendations.isNotEmpty)
-                        _buildResultsList(provider.recommendations)
-                      else
-                        _buildEmptyState(),
-                    ],
-                  ),
-                );
-              },
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        body: Column(
+          children: [
+            const MainTabHeader(title: 'Rekomendasi Lokasi'),
+            Expanded(
+              child: Consumer<RecommendationProvider>(
+                builder: (context, provider, child) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildFormCard(),
+                        const SizedBox(height: 24),
+                        if (provider.isLoading)
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 40),
+                              child: CircularProgressIndicator(),
+                            ),
+                          )
+                        else if (provider.errorMessage != null)
+                          _buildErrorState(provider.errorMessage!)
+                        else if (provider.recommendations.isNotEmpty)
+                          _buildResultsList(provider.recommendations)
+                        else
+                          _buildEmptyState(),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -221,8 +232,12 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
               label: 'Budget (Rp)',
               controller: _budgetController,
               keyboardType: TextInputType.number,
-              hint: 'Contoh: 2000000',
+              hint: 'Contoh: 2.000.000',
               icon: Icons.payments_outlined,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                RupiahInputFormatter(),
+              ],
             ),
             const SizedBox(height: 18),
 
@@ -568,6 +583,33 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class RupiahInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    if (newValue.text.isEmpty) {
+      return newValue.copyWith(text: '');
+    }
+
+    // Ambil hanya angka
+    String newText = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (newText.isEmpty) return newValue.copyWith(text: '');
+
+    final int value = int.parse(newText);
+    final String formatted = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: '',
+      decimalDigits: 0,
+    ).format(value).trim();
+
+    return newValue.copyWith(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'register_screen.dart';
+import 'forgot_password_screen.dart';
 import 'shared_auth_widgets.dart';
 import '../../providers/auth_provider.dart';
 import '../main/main_screen.dart';
@@ -219,9 +220,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         AuthHoverLink(
                           text: 'Lupa password?',
                           onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Fitur lupa password belum tersedia'),
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ForgotPasswordScreen(),
                               ),
                             );
                           },

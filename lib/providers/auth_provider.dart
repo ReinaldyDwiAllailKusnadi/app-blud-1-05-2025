@@ -204,4 +204,62 @@ class AuthProvider extends BaseProvider {
       return false;
     }
   }
+
+  Future<String?> forgotPassword(String email) async {
+    setLoading(true);
+    setError(null);
+    try {
+      final response = await _authService.forgotPassword(email);
+      setLoading(false);
+      return response.data['message'];
+    } catch (e) {
+      handleDioError(e, defaultMessage: 'Gagal mengirim kode reset. Silakan coba lagi.');
+      setLoading(false);
+      return null;
+    }
+  }
+
+  Future<bool> verifyResetCode({
+    required String email,
+    required String code,
+  }) async {
+    setLoading(true);
+    setError(null);
+    try {
+      await _authService.verifyResetCode(
+        email: email,
+        code: code,
+      );
+      setLoading(false);
+      return true;
+    } catch (e) {
+      handleDioError(e, defaultMessage: 'Verifikasi kode gagal. Silakan coba lagi.');
+      setLoading(false);
+      return false;
+    }
+  }
+
+  Future<bool> resetPassword({
+    required String email,
+    required String code,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    setLoading(true);
+    setError(null);
+    try {
+      await _authService.resetPassword(
+        email: email,
+        code: code,
+        password: password,
+        passwordConfirmation: passwordConfirmation,
+      );
+      setLoading(false);
+      return true;
+    } catch (e) {
+      handleDioError(e, defaultMessage: 'Gagal mereset password. Silakan coba lagi.');
+      setLoading(false);
+      return false;
+    }
+  }
 }

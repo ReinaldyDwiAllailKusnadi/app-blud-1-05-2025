@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -63,49 +64,56 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      body: Consumer2<ContentProvider, EventProvider>(
-        builder: (context, contentProv, eventProv, _) {
-          if (contentProv.isLoading && contentProv.featuredContents.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        body: Consumer2<ContentProvider, EventProvider>(
+          builder: (context, contentProv, eventProv, _) {
+            if (contentProv.isLoading && contentProv.featuredContents.isEmpty) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          return RefreshIndicator(
-            onRefresh: () async {
-              await contentProv.fetchHomeData();
-              await eventProv.fetchJadwal();
-            },
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.only(bottom: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── Blue Header ──
-                  _buildHeader(context),
+            return RefreshIndicator(
+              onRefresh: () async {
+                await contentProv.fetchHomeData();
+                await eventProv.fetchJadwal();
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── Blue Header ──
+                    _buildHeader(context),
 
-                  const SizedBox(height: 32),
+                    const SizedBox(height: 32),
 
-                  // ── Destination Section ──
-                  _buildSectionTitle('Destinasi Unggulan'),
-                  const SizedBox(height: 16),
-                  _buildDestinationSection(contentProv),
+                    // ── Destination Section ──
+                    _buildSectionTitle('Destinasi Unggulan'),
+                    const SizedBox(height: 16),
+                    _buildDestinationSection(contentProv),
 
-                  const SizedBox(height: 32),
+                    const SizedBox(height: 32),
 
-                  // ── Event Section ──
-                  _buildEventSection(eventProv),
+                    // ── Event Section ──
+                    _buildEventSection(eventProv),
 
-                  const SizedBox(height: 32),
+                    const SizedBox(height: 32),
 
-                  // ── Recommendation Section ──
-                  _buildRecommendationSection(context),
-                ],
+                    // ── Recommendation Section ──
+                    _buildRecommendationSection(context),
+                  ],
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -218,42 +226,46 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
-    final topPadding = MediaQuery.of(context).padding.top;
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, topPadding + 20, 20, 32),
       decoration: const BoxDecoration(
         gradient: AppTheme.blueHeaderGradient,
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                'Selamat Datang di',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white.withValues(alpha: 0.9),
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Selamat Datang di',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
+                  ),
+                  Text(
+                    'BLUD Pariwisata',
+                    style: GoogleFonts.inter(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                'BLUD Pariwisata',
-                style: GoogleFonts.inter(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                  letterSpacing: -0.5,
-                ),
-              ),
+              // Menu Button
+              _buildHeaderMenu(context),
             ],
           ),
-          // Menu Button
-          _buildHeaderMenu(context),
-        ],
+        ),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
@@ -11,51 +12,59 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final topPadding = MediaQuery.of(context).padding.top;
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F9),
-      body: Consumer<AuthProvider>(
-        builder: (context, authProv, _) {
-          final user = authProv.user;
-
-          return Stack(
-            children: [
-              // ── Gradient Header Background ──
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: 380,
-                child: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xFF1FACEB), Color(0xFF0F58D6), Color(0xFF2034A1)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF4F6F9),
+        body: Consumer<AuthProvider>(
+          builder: (context, authProv, _) {
+            final user = authProv.user;
+  
+            return Stack(
+              children: [
+                // ── Gradient Header Background ──
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 380,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF1FACEB), Color(0xFF0F58D6), Color(0xFF2034A1)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                     ),
                   ),
                 ),
-              ),
-
-              // ── Scrollable Content ──
-              Positioned.fill(
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.only(bottom: 40),
-                  child: Column(
-                    children: [
-                      SizedBox(height: topPadding + 24),
-                      _buildProfileHeader(user?.name ?? 'Guest', user?.username ?? '@guest'),
-                      const SizedBox(height: 28),
-                      _buildProfileCard(context, user, authProv),
-                    ],
+  
+                // ── Scrollable Content ──
+                Positioned.fill(
+                  child: SafeArea(
+                    bottom: false,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.only(bottom: 40),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 24),
+                          _buildProfileHeader(user?.name ?? 'Guest', user?.username ?? '@guest'),
+                          const SizedBox(height: 28),
+                          _buildProfileCard(context, user, authProv),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -116,7 +125,15 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 20),
 
               _buildFieldLabel('Nomor HP'),
-              _buildTextField(phoneController, 'Masukkan nomor HP', keyboardType: TextInputType.phone),
+              _buildTextField(
+                phoneController, 
+                'Masukkan nomor HP', 
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(12),
+                ],
+              ),
               const SizedBox(height: 20),
 
               _buildFieldLabel('Email (Read-only)'),
@@ -133,6 +150,15 @@ class ProfileScreen extends StatelessWidget {
                         if (nameController.text.isEmpty || usernameController.text.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Nama dan Username wajib diisi')),
+                          );
+                          return;
+                        }
+
+                        // Phone Validation (if provided)
+                        final phone = phoneController.text.trim();
+                        if (phone.isNotEmpty && (phone.length < 10 || phone.length > 12)) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Nomor HP minimal 10 digit dan maksimal 12 digit.')),
                           );
                           return;
                         }
@@ -220,11 +246,12 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint, {bool enabled = true, TextInputType? keyboardType}) {
+  Widget _buildTextField(TextEditingController controller, String hint, {bool enabled = true, TextInputType? keyboardType, List<TextInputFormatter>? inputFormatters}) {
     return TextField(
       controller: controller,
       enabled: enabled,
       keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
       style: GoogleFonts.inter(
         fontSize: 15,
         fontWeight: FontWeight.w600,

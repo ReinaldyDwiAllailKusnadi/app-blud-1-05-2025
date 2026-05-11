@@ -6,7 +6,6 @@ import '../models/submission_model.dart';
 import '../services/submission_service.dart';
 import '../core/providers/base_provider.dart';
 import '../core/network/dio_client.dart';
-import '../core/constants/constants.dart';
 
 class SubmissionProvider extends BaseProvider {
   final SubmissionService _submissionService;
@@ -40,24 +39,14 @@ class SubmissionProvider extends BaseProvider {
     setError(null);
 
     try {
-      final token = await _dioClient.getToken();
-      debugPrint('--- Submission History Debug ---');
-      debugPrint('Base URL: ${ApiConstants.baseUrl}');
-      debugPrint('Token exists: ${token != null}');
-      if (token != null && token.length > 20) {
-        debugPrint('Token starts with: ${token.substring(0, 15)}...');
-      }
+
 
       final response = await _submissionService.getHistory();
       final data = response.data;
-      debugPrint('Full API Response: $data');
       
       List rawList = [];
 
       if (data is Map) {
-        if (data['debug'] != null) {
-          debugPrint('Backend Debug: ${data['debug']}');
-        }
         
         if (data['data'] is List) {
           rawList = data['data'];
@@ -72,7 +61,7 @@ class SubmissionProvider extends BaseProvider {
         rawList = data;
       }
 
-      debugPrint('Parsed rawList length: ${rawList.length}');
+
 
       _history = rawList
           .whereType<Map>()
@@ -89,8 +78,7 @@ class SubmissionProvider extends BaseProvider {
           .whereType<SubmissionModel>()
           .toList();
           
-      debugPrint('Final history length: ${_history.length}');
-      debugPrint('---------------------------------');
+
     } catch (e) {
       debugPrint('Error in fetchHistory: $e');
       handleDioError(e, defaultMessage: 'Gagal memuat riwayat pengajuan');
@@ -103,26 +91,13 @@ class SubmissionProvider extends BaseProvider {
     setLoading(true);
     setError(null);
 
-    debugPrint('--- Submitting Booking ---');
-    debugPrint('Base URL: ${ApiConstants.baseUrl}');
-    debugPrint('Endpoint: /submission');
-    
-    // Log non-file fields
-    for (var field in formData.fields) {
-      debugPrint('Field: ${field.key} = ${field.value}');
-    }
-    
-    // Log files
-    for (var file in formData.files) {
-      debugPrint('File Key: ${file.key}, Filename: ${file.value.filename}, Length: ${file.value.length}');
-    }
+
 
     try {
-      final token = await _dioClient.getToken();
-      debugPrint('Auth Token Exists: ${token != null}');
+
       
       final response = await _submissionService.submitRequest(formData);
-      debugPrint('Submission Success Response: ${response.data}');
+
       
       if (response.data['success'] == true) {
         await fetchHistory();
@@ -134,15 +109,7 @@ class SubmissionProvider extends BaseProvider {
         return false;
       }
     } catch (e) {
-      debugPrint('--- Submission Error ---');
-      if (e is DioException) {
-        debugPrint('Status Code: ${e.response?.statusCode}');
-        debugPrint('Response Data: ${e.response?.data}');
-        debugPrint('Error Type: ${e.type}');
-        debugPrint('Error Message: ${e.message}');
-      } else {
-        debugPrint('Unknown Error: $e');
-      }
+
       handleDioError(e, defaultMessage: 'Gagal mengirim pengajuan.');
       setLoading(false);
       return false;
