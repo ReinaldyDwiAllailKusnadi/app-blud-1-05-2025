@@ -9,6 +9,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/submission_provider.dart';
 import '../auth/login_screen.dart';
 import '../../core/widgets/pressable.dart';
+import '../../models/content_model.dart';
 
 class SubmissionFormScreen extends StatefulWidget {
   final String? prefilledLocation;
@@ -38,8 +39,10 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
   final _vendorCtrl = TextEditingController();
   final _eventNameCtrl = TextEditingController();
   
+  final _scrollController = ScrollController();
+  
   // Form State
-  String? _selectedLocation;
+  int? _selectedLocationId;
   DateTime? _startDate;
   DateTime? _endDate;
   
@@ -52,7 +55,7 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedLocation = widget.prefilledLocation;
+    _selectedLocationId = widget.prefilledLocationId;
     _startDate = widget.prefilledDate;
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -62,6 +65,7 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _namePicCtrl.dispose();
     _noHpCtrl.dispose();
     _addressCtrl.dispose();
@@ -97,6 +101,9 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
           case 'actv_letter': _actvLetter = file; break;
         }
       });
+      // Clear error for this field
+      if (!mounted) return;
+      context.read<SubmissionProvider>().clearFieldError(type);
     }
   }
 
@@ -124,11 +131,13 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
       setState(() {
         if (isStart) {
           _startDate = picked;
+          context.read<SubmissionProvider>().clearFieldError('start_date');
           if (_endDate != null && _endDate!.isBefore(_startDate!)) {
             _endDate = null;
           }
         } else {
           _endDate = picked;
+          context.read<SubmissionProvider>().clearFieldError('end_date');
         }
       });
     }
@@ -173,18 +182,18 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
       'no_hp': _noHpCtrl.text.trim(),
       'address': _addressCtrl.text.trim(),
       'vendor': _vendorCtrl.text.trim(),
-      'location': _selectedLocation,
+      'content_id': _selectedLocationId,
       'name_event': _eventNameCtrl.text.trim(),
-      'start_date': DateFormat('yyyy-MM-dd').format(_startDate!),
-      'end_date': DateFormat('yyyy-MM-dd').format(_endDate!),
+      'start_date': _startDate != null ? DateFormat('yyyy-MM-dd').format(_startDate!) : null,
+      'end_date': _endDate != null ? DateFormat('yyyy-MM-dd').format(_endDate!) : null,
     };
 
     final formData = dio.FormData.fromMap(formDataMap);
 
     // Add Files (only if not null)
-    final ktpFile = await SubmissionProvider.multipartFromPickedFile(_ktp);
-    if (ktpFile != null) {
-      formData.files.add(MapEntry('ktp', ktpFile));
+    if (_ktp != null) {
+      final ktpFile = await SubmissionProvider.multipartFromPickedFile(_ktp);
+      if (ktpFile != null) formData.files.add(MapEntry('ktp', ktpFile));
     }
 
     if (_file != null) {
@@ -224,10 +233,20 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
         ),
       );
     } else if (mounted) {
+      // Scroll to first error
+      if (provider.fieldErrors.isNotEmpty) {
+        _scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(provider.errorMessage ?? 'Gagal mengirim pengajuan.'),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
         ),
       );
     }
@@ -327,6 +346,7 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
 
                   Expanded(
                     child: SingleChildScrollView(
+                      controller: _scrollController,
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
                       child: Container(
@@ -352,11 +372,13 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
                                 style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800, color: const Color(0xFF1E293B)),
                               ),
                               const SizedBox(height: 20),
-                              _buildField(
+                               _buildField(
                                 label: 'Nama PIC',
                                 controller: _namePicCtrl,
                                 icon: Icons.person_rounded,
                                 hint: 'Nama lengkap penanggung jawab',
+                                errorText: provider.fieldErrors['namePIC']?.first,
+                                onChanged: (v) => provider.clearFieldError('namePIC'),
                               ),
                               const SizedBox(height: 16),
                               _buildField(
@@ -369,6 +391,8 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
                                   FilteringTextInputFormatter.digitsOnly,
                                   LengthLimitingTextInputFormatter(12),
                                 ],
+                                errorText: provider.fieldErrors['no_hp']?.first,
+                                onChanged: (v) => provider.clearFieldError('no_hp'),
                               ),
                               const SizedBox(height: 16),
                               _buildField(
@@ -376,6 +400,8 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
                                 controller: _addressCtrl,
                                 icon: Icons.home_work_rounded,
                                 hint: 'Alamat lengkap instansi/pribadi',
+                                errorText: provider.fieldErrors['address']?.first,
+                                onChanged: (v) => provider.clearFieldError('address'),
                               ),
                               const SizedBox(height: 16),
                               _buildField(
@@ -383,6 +409,8 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
                                 controller: _vendorCtrl,
                                 icon: Icons.business_center_rounded,
                                 hint: 'Nama organisasi atau vendor sewa',
+                                errorText: provider.fieldErrors['vendor']?.first,
+                                onChanged: (v) => provider.clearFieldError('vendor'),
                               ),
                               
                               const SizedBox(height: 32),
@@ -391,12 +419,16 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
                                 style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800, color: const Color(0xFF1E293B)),
                               ),
                               const SizedBox(height: 20),
-                              _buildDropdown(
+                               _buildDropdown(
                                 label: 'Lokasi Wisata / Tempat',
-                                value: _selectedLocation,
-                                items: provider.locationOptions.map((l) => l.name).toList(),
-                                onChanged: (v) => setState(() => _selectedLocation = v),
+                                value: _selectedLocationId,
+                                items: provider.locationOptions,
+                                onChanged: (v) {
+                                  setState(() => _selectedLocationId = v);
+                                  provider.clearFieldError('content_id');
+                                },
                                 icon: Icons.location_on_rounded,
+                                errorText: provider.fieldErrors['content_id']?.first,
                               ),
                               const SizedBox(height: 16),
                               _buildField(
@@ -404,6 +436,8 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
                                 controller: _eventNameCtrl,
                                 icon: Icons.event_note_rounded,
                                 hint: 'Judul atau deskripsi singkat acara',
+                                errorText: provider.fieldErrors['name_event']?.first,
+                                onChanged: (v) => provider.clearFieldError('name_event'),
                               ),
                               const SizedBox(height: 16),
                               // Date selection with LayoutBuilder to prevent overflow
@@ -418,12 +452,14 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
                                           label: 'Tanggal Mulai',
                                           date: _startDate,
                                           onTap: () => _pickDate(true),
+                                          errorText: provider.fieldErrors['start_date']?.first,
                                         ),
                                         const SizedBox(height: 14),
                                         _buildDatePicker(
                                           label: 'Tanggal Selesai',
                                           date: _endDate,
                                           onTap: () => _pickDate(false),
+                                          errorText: provider.fieldErrors['end_date']?.first,
                                         ),
                                       ],
                                     );
@@ -437,6 +473,7 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
                                           label: 'Tanggal Mulai',
                                           date: _startDate,
                                           onTap: () => _pickDate(true),
+                                          errorText: provider.fieldErrors['start_date']?.first,
                                         ),
                                       ),
                                       const SizedBox(width: 12),
@@ -445,6 +482,7 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
                                           label: 'Tanggal Selesai',
                                           date: _endDate,
                                           onTap: () => _pickDate(false),
+                                          errorText: provider.fieldErrors['end_date']?.first,
                                         ),
                                       ),
                                     ],
@@ -463,29 +501,33 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
                                 style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
                               ),
                               const SizedBox(height: 20),
-                              _buildFilePicker(
+                               _buildFilePicker(
                                 label: 'Scan KTP (PDF)',
                                 file: _ktp,
                                 onPick: () => _pickFile('ktp'),
                                 isRequired: true,
+                                errorText: provider.fieldErrors['ktp']?.first,
                               ),
                               _buildFilePicker(
                                 label: 'File Proposal (Wajib PDF)',
                                 file: _file,
                                 onPick: () => _pickFile('file'),
                                 isRequired: true,
+                                errorText: provider.fieldErrors['file']?.first,
                               ),
                               _buildFilePicker(
                                 label: 'Surat Pengajuan (Wajib PDF)',
                                 file: _applLetter,
                                 onPick: () => _pickFile('appl_letter'),
                                 isRequired: true,
+                                errorText: provider.fieldErrors['appl_letter']?.first,
                               ),
                               _buildFilePicker(
                                 label: 'Surat Rundown / Kegiatan (Wajib PDF)',
                                 file: _actvLetter,
                                 onPick: () => _pickFile('actv_letter'),
                                 isRequired: true,
+                                errorText: provider.fieldErrors['actv_letter']?.first,
                               ),
 
                               const SizedBox(height: 40),
@@ -550,6 +592,8 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
     String? hint,
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
+    String? errorText,
+    Function(String)? onChanged,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -562,6 +606,7 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
           controller: controller,
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,
+          onChanged: onChanged,
           style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
           decoration: InputDecoration(
             hintText: hint,
@@ -569,12 +614,17 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
             filled: true,
             fillColor: const Color(0xFFF8FAFC),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF1461D2), width: 1.5)),
-            errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Colors.red)),
-            focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Colors.red, width: 1.5)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14), 
+              borderSide: BorderSide(color: errorText != null ? Colors.red : const Color(0xFFE2E8F0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14), 
+              borderSide: BorderSide(color: errorText != null ? Colors.red : const Color(0xFF1461D2), width: 1.5),
+            ),
+            errorText: errorText,
+            errorStyle: const TextStyle(height: 0.8),
           ),
-          validator: (v) => v == null || v.isEmpty ? 'Wajib diisi' : null,
         ),
       ],
     );
@@ -582,10 +632,11 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
 
   Widget _buildDropdown({
     required String label,
-    required String? value,
-    required List<String> items,
-    required Function(String?) onChanged,
+    required int? value,
+    required List<ContentModel> items,
+    required Function(int?) onChanged,
     required IconData icon,
+    String? errorText,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -594,8 +645,8 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(label, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
         ),
-        DropdownButtonFormField<String>(
-          value: items.contains(value) ? value : null,
+        DropdownButtonFormField<int>(
+          initialValue: value,
           isExpanded: true,
           icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
           style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
@@ -604,22 +655,19 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
             filled: true,
             fillColor: const Color(0xFFF8FAFC),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF1461D2), width: 1.5)),
-            errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Colors.red)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14), 
+              borderSide: BorderSide(color: errorText != null ? Colors.red : const Color(0xFFE2E8F0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14), 
+              borderSide: BorderSide(color: errorText != null ? Colors.red : const Color(0xFF1461D2), width: 1.5),
+            ),
+            errorText: errorText,
+            errorStyle: const TextStyle(height: 0.8),
           ),
-          selectedItemBuilder: (context) {
-            return items.map((String item) {
-              return Text(
-                item,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              );
-            }).toList();
-          },
-          items: items.map((e) => DropdownMenuItem(value: e, child: Text(e, overflow: TextOverflow.ellipsis))).toList(),
+          items: items.map((e) => DropdownMenuItem(value: e.id, child: Text(e.name, overflow: TextOverflow.ellipsis))).toList(),
           onChanged: onChanged,
-          validator: (v) => v == null ? 'Pilih lokasi' : null,
         ),
       ],
     );
@@ -629,6 +677,7 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
     required String label,
     required DateTime? date,
     required VoidCallback onTap,
+    String? errorText,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -645,7 +694,7 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: errorText != null ? Colors.red : const Color(0xFFE2E8F0)),
             ),
             child: Row(
               children: [
@@ -667,6 +716,11 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
             ),
           ),
         ),
+        if (errorText != null)
+          Padding(
+            padding: const EdgeInsets.only(left: 4, top: 4),
+            child: Text(errorText, style: const TextStyle(color: Colors.red, fontSize: 12)),
+          ),
       ],
     );
   }
@@ -676,62 +730,73 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
     required PlatformFile? file,
     required VoidCallback onPick,
     bool isRequired = false,
+    String? errorText,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
-      child: Pressable(
-        onTap: onPick,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          decoration: BoxDecoration(
-            color: file != null ? const Color(0xFFF0F9FF) : Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Pressable(
+            onTap: onPick,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: file != null ? const Color(0xFF1461D2) : const Color(0xFFE2E8F0),
-              width: file != null ? 1.5 : 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                file != null ? Icons.check_circle_rounded : Icons.cloud_upload_rounded,
-                color: const Color(0xFF1461D2),
-                size: 24,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1E293B),
-                      ),
-                    ),
-                    if (file != null)
-                      Text(
-                        file.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF1461D2), fontWeight: FontWeight.w500),
-                      )
-                    else
-                      Text(
-                        isRequired ? 'Wajib (Format PDF)' : 'Opsional (Format PDF)',
-                        style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF94A3B8)),
-                      ),
-                  ],
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              decoration: BoxDecoration(
+                color: file != null ? const Color(0xFFF0F9FF) : Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: errorText != null ? Colors.red : (file != null ? const Color(0xFF1461D2) : const Color(0xFFE2E8F0)),
+                  width: (file != null || errorText != null) ? 1.5 : 1,
                 ),
               ),
-              if (file != null)
-                const Icon(Icons.edit_rounded, size: 18, color: Color(0xFF64748B)),
-            ],
+              child: Row(
+                children: [
+                  Icon(
+                    file != null ? Icons.check_circle_rounded : Icons.cloud_upload_rounded,
+                    color: errorText != null ? Colors.red : const Color(0xFF1461D2),
+                    size: 24,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF1E293B),
+                          ),
+                        ),
+                        if (file != null)
+                          Text(
+                            file.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF1461D2), fontWeight: FontWeight.w500),
+                          )
+                        else
+                          Text(
+                            isRequired ? 'Wajib (Format PDF)' : 'Opsional (Format PDF)',
+                            style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF94A3B8)),
+                          ),
+                      ],
+                    ),
+                  ),
+                  if (file != null)
+                    const Icon(Icons.edit_rounded, size: 18, color: Color(0xFF64748B)),
+                ],
+              ),
+            ),
           ),
-        ),
+          if (errorText != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 4, top: 4),
+              child: Text(errorText, style: const TextStyle(color: Colors.red, fontSize: 12)),
+            ),
+        ],
       ),
     );
   }

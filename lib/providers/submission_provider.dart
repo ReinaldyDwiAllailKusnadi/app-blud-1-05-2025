@@ -5,19 +5,25 @@ import '../models/content_model.dart';
 import '../models/submission_model.dart';
 import '../services/submission_service.dart';
 import '../core/providers/base_provider.dart';
-import '../core/network/dio_client.dart';
+
 
 class SubmissionProvider extends BaseProvider {
   final SubmissionService _submissionService;
-  final DioClient _dioClient;
 
   List<ContentModel> _locationOptions = [];
   List<SubmissionModel> _history = [];
 
-  SubmissionProvider(this._submissionService, this._dioClient);
+  SubmissionProvider(this._submissionService);
 
   List<ContentModel> get locationOptions => _locationOptions;
   List<SubmissionModel> get history => _history;
+
+  void clearFieldError(String field) {
+    if (fieldErrors.containsKey(field)) {
+      fieldErrors.remove(field);
+      notifyListeners();
+    }
+  }
 
   Future<void> fetchLocationOptions() async {
     setLoading(true);
@@ -70,8 +76,6 @@ class SubmissionProvider extends BaseProvider {
               final model = SubmissionModel.fromJson(Map<String, dynamic>.from(item));
               return model;
             } catch (e) {
-              debugPrint('Error parsing SubmissionModel: $e');
-              debugPrint('Problematic item: $item');
               return null;
             }
           })

@@ -1,0 +1,111 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor LightBlue
+  BorderColor DarkBlue
+  ArrowColor DarkBlue
+}
+
+actor "Masyarakat /\nPemohon Sewa" as User
+actor "Petugas BLUD" as Admin
+
+rectangle "Aplikasi Pengajuan Sewa Lokasi Wisata BLUD Teratai Mas" {
+
+  package "Autentikasi" {
+    usecase "Registrasi Akun" as UC_Reg
+    usecase "Login" as UC_Login
+    usecase "Logout" as UC_Logout
+  }
+  
+  package "Informasi Lokasi Wisata" {
+    usecase "Melihat Beranda" as UC_Home
+    usecase "Melihat Daftar Lokasi Wisata" as UC_Wisata
+    usecase "Melihat Detail Lokasi Wisata" as UC_DetailWisata
+    usecase "Melihat Fasilitas dan Harga" as UC_Fasilitas
+    usecase "Melihat Jadwal Lokasi Wisata" as UC_Jadwal
+  }
+  
+  package "Rekomendasi Lokasi" {
+    usecase "Menggunakan Rekomendasi Lokasi" as UC_Rec
+    usecase "Mengisi Kriteria Rekomendasi" as UC_RecKriteria
+    usecase "Melihat Hasil Rekomendasi" as UC_RecHasil
+    usecase "Melihat Skor/Status Rekomendasi" as UC_RecSkor
+  }
+
+  package "Pengajuan Sewa" {
+    usecase "Mengajukan Sewa Lokasi" as UC_Sewa
+    usecase "Mengisi Form Pengajuan Sewa" as UC_FormSewa
+    usecase "Mengunggah Dokumen Lampiran" as UC_UploadDoc
+    usecase "Mengunggah Proposal PDF" as UC_UpProp
+    usecase "Mengunggah KTP PDF" as UC_UpKTP
+    usecase "Mengunggah Surat Pengajuan PDF" as UC_UpPengajuan
+    usecase "Mengunggah Surat Kegiatan PDF" as UC_UpKegiatan
+    usecase "Mengirim Pengajuan Sewa" as UC_KirimSewa
+  }
+
+  package "Riwayat dan Profil" {
+    usecase "Melihat Riwayat Pengajuan" as UC_Riwayat
+    usecase "Melihat Status Pengajuan" as UC_Status
+    usecase "Mengunduh Lampiran Pengajuan" as UC_UnduhUser
+    usecase "Melihat Profil" as UC_Profil
+    usecase "Mengubah Profil" as UC_UbahProfil
+  }
+  
+  package "Pengelolaan oleh Petugas BLUD" {
+    usecase "Mengelola Data Lokasi Wisata" as UC_KelolaLokasi
+    usecase "Mengelola Fasilitas dan Harga" as UC_KelolaFasilitas
+    usecase "Mengelola Jadwal Lokasi Wisata" as UC_KelolaJadwal
+    usecase "Melihat Daftar Pengajuan Sewa" as UC_DaftarSewaAdmin
+    usecase "Melihat Detail Pengajuan Sewa" as UC_DetailSewaAdmin
+    usecase "Mengunduh Lampiran Pengajuan" as UC_UnduhAdmin
+    usecase "Menyetujui Pengajuan" as UC_SetujuSewa
+    usecase "Menolak Pengajuan" as UC_TolakSewa
+  }
+}
+
+User --> UC_Reg
+User --> UC_Login
+User --> UC_Logout
+User --> UC_Home
+User --> UC_Wisata
+User --> UC_DetailWisata
+User --> UC_Jadwal
+User --> UC_Rec
+User --> UC_Sewa
+User --> UC_Riwayat
+User --> UC_Profil
+
+Admin --> UC_Login
+Admin --> UC_Logout
+Admin --> UC_KelolaLokasi
+Admin --> UC_KelolaFasilitas
+Admin --> UC_KelolaJadwal
+Admin --> UC_DaftarSewaAdmin
+
+UC_DetailWisata ..> UC_Fasilitas : <<include>>
+
+UC_Rec ..> UC_RecKriteria : <<include>>
+UC_Rec ..> UC_RecHasil : <<include>>
+UC_RecHasil ..> UC_RecSkor : <<include>>
+
+UC_Sewa ..> UC_FormSewa : <<include>>
+UC_Sewa ..> UC_UploadDoc : <<include>>
+UC_Sewa ..> UC_KirimSewa : <<include>>
+
+UC_UploadDoc ..> UC_UpProp : <<include>>
+UC_UploadDoc ..> UC_UpKTP : <<include>>
+UC_UploadDoc ..> UC_UpPengajuan : <<include>>
+UC_UploadDoc ..> UC_UpKegiatan : <<include>>
+
+UC_Riwayat ..> UC_Status : <<include>>
+UC_UnduhUser ..> UC_Riwayat : <<extend>>
+
+UC_UbahProfil ..> UC_Profil : <<extend>>
+
+UC_DaftarSewaAdmin ..> UC_DetailSewaAdmin : <<include>>
+UC_UnduhAdmin ..> UC_DetailSewaAdmin : <<extend>>
+UC_SetujuSewa ..> UC_DetailSewaAdmin : <<include>>
+UC_TolakSewa ..> UC_DetailSewaAdmin : <<include>>
+
+@enduml

@@ -4,9 +4,11 @@ import 'package:dio/dio.dart';
 abstract class BaseProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
+  Map<String, List<String>> _errors = {};
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  Map<String, List<String>> get fieldErrors => _errors;
 
   void setLoading(bool value) {
     _isLoading = value;
@@ -20,11 +22,13 @@ abstract class BaseProvider extends ChangeNotifier {
 
   void clearError() {
     _errorMessage = null;
+    _errors = {};
     notifyListeners();
   }
 
   /// Utility to handle common Dio errors and parse messages
   void handleDioError(dynamic e, {String? defaultMessage}) {
+    _errors = {};
     if (e is DioException) {
       if (e.response != null) {
         final data = e.response?.data;
@@ -35,21 +39,24 @@ abstract class BaseProvider extends ChangeNotifier {
         } else if (statusCode == 413) {
           _errorMessage = 'Ukuran file terlalu besar. Maksimal 5MB.';
         } else if (statusCode == 422 && data is Map) {
-          // Extract validation error
-          if (data['message'] != null) {
-            _errorMessage = data['message'].toString();
-          } else if (data['errors'] is Map) {
-            final errors = data['errors'] as Map;
-            if (errors.isNotEmpty) {
-              final first = errors.values.first;
-              if (first is List && first.isNotEmpty) {
-                _errorMessage = first.first.toString();
-              } else {
-                _errorMessage = first.toString();
+          // Extract validation errors
+          if (data['errors'] is Map) {
+            final rawErrors = data['errors'] as Map;
+            _errors = rawErrors.map((key, value) {
+              if (value is List) {
+                return MapEntry(key.toString(), value.map((v) => v.toString()).toList());
               }
+              return MapEntry(key.toString(), [value.toString()]);
+            });
+
+            // Set main error message to the first validation error
+            if (_errors.isNotEmpty) {
+              _errorMessage = _errors.values.first.first;
+            } else {
+              _errorMessage = data['message']?.toString() ?? defaultMessage ?? 'Validasi gagal.';
             }
           } else {
-            _errorMessage = defaultMessage ?? 'Data yang dikirim tidak valid.';
+            _errorMessage = data['message']?.toString() ?? defaultMessage ?? 'Data yang dikirim tidak valid.';
           }
         } else if (statusCode == 500) {
           _errorMessage = 'Terjadi kesalahan pada server (500).';

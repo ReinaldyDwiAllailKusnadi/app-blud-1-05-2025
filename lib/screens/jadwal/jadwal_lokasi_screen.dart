@@ -15,9 +15,10 @@ class _JadwalLokasiScreenState extends State<JadwalLokasiScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      if (!mounted) return;
-      Provider.of<DataProvider>(context, listen: false).fetchWisata();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        Provider.of<DataProvider>(context, listen: false).fetchWisata();
+      }
     });
   }
 
@@ -86,9 +87,10 @@ class _JadwalPerLokasiScreenState extends State<JadwalPerLokasiScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      if (!mounted) return;
-      Provider.of<DataProvider>(context, listen: false).fetchJadwalByLocation(widget.slug);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        Provider.of<DataProvider>(context, listen: false).fetchJadwalByLocation(widget.slug);
+      }
     });
   }
 

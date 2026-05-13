@@ -6,6 +6,7 @@ import 'login_screen.dart';
 import 'shared_auth_widgets.dart';
 import '../../providers/auth_provider.dart';
 import '../main/main_screen.dart';
+import '../../core/theme/app_theme.dart';
 
 /// Register Screen - BLUD Pariwisata
 /// Full screen native Flutter, tanpa phone frame/mockup.
@@ -143,158 +144,161 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AuthColors.bgContainer,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Back Button ──
-              Padding(
-                padding: const EdgeInsets.only(left: 14, top: 10),
-                child: GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    child: Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      size: 22,
-                      color: Colors.grey.shade700,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: AppTheme.authSystemUiOverlayStyle,
+      child: Scaffold(
+        backgroundColor: AuthColors.bgContainer,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Back Button ──
+                Padding(
+                  padding: const EdgeInsets.only(left: 14, top: 10),
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      child: Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        size: 22,
+                        color: Colors.grey.shade700,
+                      ),
                     ),
                   ),
                 ),
-              ),
-
-              // ── Main Content ──
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 26),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 16),
-
-                    // ── Title ──
-                    Text(
-                      'Daftar Akun',
-                      style: GoogleFonts.inter(
-                        fontSize: 34,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0A101D),
-                        height: 1.1,
-                        letterSpacing: -0.03 * 34,
+  
+                // ── Main Content ──
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 26),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 16),
+  
+                      // ── Title ──
+                      Text(
+                        'Daftar Akun',
+                        style: GoogleFonts.inter(
+                          fontSize: 34,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF0A101D),
+                          height: 1.1,
+                          letterSpacing: -0.03 * 34,
+                        ),
                       ),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    // ── Subtitle ──
-                    Text(
-                      'Isi data diri Anda untuk membuat akun.',
-                      style: GoogleFonts.inter(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF1E293B),
+  
+                      const SizedBox(height: 10),
+  
+                      // ── Subtitle ──
+                      Text(
+                        'Isi data diri Anda untuk membuat akun.',
+                        style: GoogleFonts.inter(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF1E293B),
+                        ),
                       ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // ── Form Inputs ──
-                    _RegisterTextField(
-                      controller: _nameCtrl,
-                      hintText: 'Nama Lengkap',
-                      keyboardType: TextInputType.name,
-                    ),
-
-                    const SizedBox(height: 18),
-
-                    _RegisterTextField(
-                      controller: _phoneCtrl,
-                      hintText: 'Nomor WhatsApp',
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(12),
-                      ],
-                    ),
-
-                    const SizedBox(height: 18),
-
-                    _RegisterTextField(
-                      controller: _emailCtrl,
-                      hintText: 'Email',
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-
-                    const SizedBox(height: 18),
-
-                    _RegisterTextField(
-                      controller: _passCtrl,
-                      hintText: 'Kata Sandi',
-                      obscureText: true,
-                    ),
-
-                    const SizedBox(height: 18),
-
-                    _RegisterTextField(
-                      controller: _passConfirmCtrl,
-                      hintText: 'Konfirmasi Kata Sandi',
-                      obscureText: true,
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // ── Info Box ──
-                    const _InfoBox(),
-
-                    const SizedBox(height: 32),
-
-                    // ── Daftar Button (Gradient) ──
-                    Consumer<AuthProvider>(
-                      builder: (context, auth, child) {
-                        return GradientButton(
-                          label: auth.isLoading ? 'Mendaftarkan...' : 'Daftar',
-                          onTap: auth.isLoading ? () {} : _handleRegister,
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 40),
-
-                    // ── Footer ──
-                    Center(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Sudah punya akun? ',
-                            style: GoogleFonts.inter(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w400,
-                              color: const Color(0xFF1E293B),
-                            ),
-                          ),
-                          AuthHoverLink(
-                            text: 'Login di sini',
-                            onTap: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const LoginScreen(),
-                                ),
-                              );
-                            },
-                          ),
+  
+                      const SizedBox(height: 32),
+  
+                      // ── Form Inputs ──
+                      _RegisterTextField(
+                        controller: _nameCtrl,
+                        hintText: 'Nama Lengkap',
+                        keyboardType: TextInputType.name,
+                      ),
+  
+                      const SizedBox(height: 18),
+  
+                      _RegisterTextField(
+                        controller: _phoneCtrl,
+                        hintText: 'Nomor WhatsApp',
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(12),
                         ],
                       ),
-                    ),
-
-                    const SizedBox(height: 40),
-                  ],
+  
+                      const SizedBox(height: 18),
+  
+                      _RegisterTextField(
+                        controller: _emailCtrl,
+                        hintText: 'Email',
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+  
+                      const SizedBox(height: 18),
+  
+                      _RegisterTextField(
+                        controller: _passCtrl,
+                        hintText: 'Kata Sandi',
+                        obscureText: true,
+                      ),
+  
+                      const SizedBox(height: 18),
+  
+                      _RegisterTextField(
+                        controller: _passConfirmCtrl,
+                        hintText: 'Konfirmasi Kata Sandi',
+                        obscureText: true,
+                      ),
+  
+                      const SizedBox(height: 24),
+  
+                      // ── Info Box ──
+                      const _InfoBox(),
+  
+                      const SizedBox(height: 32),
+  
+                      // ── Daftar Button (Gradient) ──
+                      Consumer<AuthProvider>(
+                        builder: (context, auth, child) {
+                          return GradientButton(
+                            label: auth.isLoading ? 'Mendaftarkan...' : 'Daftar',
+                            onTap: auth.isLoading ? () {} : _handleRegister,
+                          );
+                        },
+                      ),
+  
+                      const SizedBox(height: 40),
+  
+                      // ── Footer ──
+                      Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Sudah punya akun? ',
+                              style: GoogleFonts.inter(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w400,
+                                color: const Color(0xFF1E293B),
+                              ),
+                            ),
+                            AuthHoverLink(
+                              text: 'Login di sini',
+                              onTap: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const LoginScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+  
+                      const SizedBox(height: 40),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

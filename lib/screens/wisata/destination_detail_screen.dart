@@ -23,7 +23,11 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _loadDetail();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _loadDetail();
+      }
+    });
   }
 
   Future<void> _loadDetail() async {

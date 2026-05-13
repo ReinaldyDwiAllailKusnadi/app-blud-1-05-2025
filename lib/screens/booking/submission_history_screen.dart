@@ -25,11 +25,36 @@ class _SubmissionHistoryScreenState extends State<SubmissionHistoryScreen> {
     super.initState();
     final auth = Provider.of<AuthProvider>(context, listen: false);
     if (auth.isLoggedIn) {
-      Future.microtask(() {
-        if (!mounted) return;
-        Provider.of<SubmissionProvider>(context, listen: false).fetchHistory();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Provider.of<SubmissionProvider>(context, listen: false).fetchHistory();
+        }
       });
     }
+  }
+
+  String _formatIndonesianDate(String? date) {
+    if (date == null || date.isEmpty || date == '-') return 'Tanggal belum tersedia';
+
+    try {
+      final parsed = DateTime.tryParse(date);
+      if (parsed == null) return date;
+
+      const months = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      ];
+
+      return '${parsed.day} ${months[parsed.month - 1]} ${parsed.year}';
+    } catch (e) {
+      return date;
+    }
+  }
+
+  String _formatDateRange(String? start, String? end) {
+    final startText = _formatIndonesianDate(start);
+    if (end == null || end.isEmpty || end == '-' || end == start) return startText;
+    return '$startText - ${_formatIndonesianDate(end)}';
   }
 
   @override
@@ -117,8 +142,8 @@ class _SubmissionHistoryScreenState extends State<SubmissionHistoryScreen> {
                   const SizedBox(height: 16),
                   _infoRow(Icons.business_rounded, item.vendor),
                   _infoRow(Icons.location_on_rounded, item.location),
-                  _infoRow(Icons.calendar_month_rounded, '${item.startDate} - ${item.endDate}'),
-                  if (item.applyDate != null) _infoRow(Icons.access_time_rounded, 'Diajukan: ${item.applyDate}'),
+                  _infoRow(Icons.calendar_month_rounded, _formatDateRange(item.startDate, item.endDate)),
+                  if (item.applyDate != null) _infoRow(Icons.access_time_rounded, 'Diajukan: ${_formatIndonesianDate(item.applyDate)}'),
                   
                   if (item.notes != null && item.notes!.isNotEmpty) ...[
                     const SizedBox(height: 16),

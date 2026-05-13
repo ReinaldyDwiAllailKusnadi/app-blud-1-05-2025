@@ -16,9 +16,10 @@ class _JadwalBulanScreenState extends State<JadwalBulanScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      if (!mounted) return;
-      Provider.of<DataProvider>(context, listen: false).fetchJadwalByMonth(widget.slug, widget.bulan);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        Provider.of<DataProvider>(context, listen: false).fetchJadwalByMonth(widget.slug, widget.bulan);
+      }
     });
   }
 

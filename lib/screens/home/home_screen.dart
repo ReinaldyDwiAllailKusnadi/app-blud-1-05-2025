@@ -437,6 +437,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ) : null,
+                onTap: widget.onSeeAllSchedule,
               );
             },
           ),
@@ -571,6 +572,7 @@ class _EventCard extends StatelessWidget {
   final String date;
   final Color? iconColor;
   final Gradient? gradient;
+  final VoidCallback? onTap;
 
   const _EventCard({
     required this.title,
@@ -578,15 +580,14 @@ class _EventCard extends StatelessWidget {
     required this.date,
     this.iconColor,
     this.gradient,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Pressable(
       borderRadius: BorderRadius.circular(20),
-      onTap: () {
-        // Option: Navigate to schedule detail if available
-      },
+      onTap: onTap,
       child: Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

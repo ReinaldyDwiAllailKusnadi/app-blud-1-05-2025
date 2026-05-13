@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'register_screen.dart';
@@ -6,6 +7,7 @@ import 'forgot_password_screen.dart';
 import 'shared_auth_widgets.dart';
 import '../../providers/auth_provider.dart';
 import '../main/main_screen.dart';
+import '../../core/theme/app_theme.dart';
 
 /// Login Screen - BLUD Pariwisata
 /// Full screen native Flutter, tanpa phone frame/mockup.
@@ -81,234 +83,237 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AuthColors.bgContainer,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Back Button ──
-              Padding(
-                padding: const EdgeInsets.only(left: 14, top: 10),
-                child: GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    child: Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      size: 20,
-                      color: Colors.grey.shade700,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: AppTheme.authSystemUiOverlayStyle,
+      child: Scaffold(
+        backgroundColor: AuthColors.bgContainer,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Back Button ──
+                Padding(
+                  padding: const EdgeInsets.only(left: 14, top: 10),
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      child: Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        size: 20,
+                        color: Colors.grey.shade700,
+                      ),
                     ),
                   ),
                 ),
-              ),
-
-              // ── Main Content ──
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 26),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 20),
-
-                    // ── Logo ──
-                    const LogoBlud(),
-
-                    const SizedBox(height: 42),
-
-                    // ── Title ──
-                    Text(
-                      'Login ke Akun Anda',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w700,
-                        color: AuthColors.textPrimary,
-                        height: 1.1,
-                        letterSpacing: -0.03 * 30,
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // ── Subtitle ──
-                    Text(
-                      'Temukan keindahan wisata dan\nbudaya lokal bersama kami.',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: AuthColors.textSubtitle,
-                        height: 1.4,
-                        letterSpacing: -0.01 * 15,
-                      ),
-                    ),
-
-                    const SizedBox(height: 74),
-
-                    // ── Email Input ──
-                    _AuthTextField(
-                      controller: _emailCtrl,
-                      hintText: 'Email',
-                      prefixIcon: Icons.email_rounded,
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // ── Password Input ──
-                    _AuthTextField(
-                      controller: _passCtrl,
-                      hintText: 'Password',
-                      prefixIcon: Icons.lock_rounded,
-                      obscureText: _obscure,
-                      suffixIcon: GestureDetector(
-                        onTap: () => setState(() => _obscure = !_obscure),
-                        child: Icon(
-                          _obscure
-                              ? Icons.visibility_off_rounded
-                              : Icons.visibility_rounded,
-                          size: 22,
-                          color: AuthColors.inputIcon,
+  
+                // ── Main Content ──
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 26),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 20),
+  
+                      // ── Logo ──
+                      const LogoBlud(),
+  
+                      const SizedBox(height: 42),
+  
+                      // ── Title ──
+                      Text(
+                        'Login ke Akun Anda',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w700,
+                          color: AuthColors.textPrimary,
+                          height: 1.1,
+                          letterSpacing: -0.03 * 30,
                         ),
                       ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // ── Remember Me + Forgot Password Row ──
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Checkbox + Label
-                        GestureDetector(
-                          onTap: () => setState(() => _rememberMe = !_rememberMe),
-                          child: Row(
-                            children: [
-                              SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: Checkbox(
-                                  value: _rememberMe,
-                                  onChanged: (v) => setState(() => _rememberMe = v ?? false),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  side: BorderSide(
-                                    color: Colors.grey.shade400,
-                                    width: 1.5,
-                                  ),
-                                  activeColor: AuthColors.bluePrimary,
-                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  visualDensity: VisualDensity.compact,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Ingat saya',
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: AuthColors.textPrimary,
-                                ),
-                              ),
-                            ],
+  
+                      const SizedBox(height: 12),
+  
+                      // ── Subtitle ──
+                      Text(
+                        'Temukan keindahan wisata dan\nbudaya lokal bersama kami.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: AuthColors.textSubtitle,
+                          height: 1.4,
+                          letterSpacing: -0.01 * 15,
+                        ),
+                      ),
+  
+                      const SizedBox(height: 74),
+  
+                      // ── Email Input ──
+                      _AuthTextField(
+                        controller: _emailCtrl,
+                        hintText: 'Email',
+                        prefixIcon: Icons.email_rounded,
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+  
+                      const SizedBox(height: 20),
+  
+                      // ── Password Input ──
+                      _AuthTextField(
+                        controller: _passCtrl,
+                        hintText: 'Password',
+                        prefixIcon: Icons.lock_rounded,
+                        obscureText: _obscure,
+                        suffixIcon: GestureDetector(
+                          onTap: () => setState(() => _obscure = !_obscure),
+                          child: Icon(
+                            _obscure
+                                ? Icons.visibility_off_rounded
+                                : Icons.visibility_rounded,
+                            size: 22,
+                            color: AuthColors.inputIcon,
                           ),
                         ),
-
-                        // Forgot Password
-                        AuthHoverLink(
-                          text: 'Lupa password?',
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const ForgotPasswordScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 34),
-
-                    // ── Login Button (Gradient) ──
-                    Consumer<AuthProvider>(
-                      builder: (context, auth, child) {
-                        return Column(
-                          children: [
-                            GradientButton(
-                              label: auth.isLoginLoading ? 'Loading...' : 'Login',
-                              onTap: (auth.isLoginLoading || auth.isGoogleLoading) ? () {} : _handleLogin,
-                            ),
-                            const SizedBox(height: 24),
-                            
-                            // Divider OR
-                            Row(
+                      ),
+  
+                      const SizedBox(height: 16),
+  
+                      // ── Remember Me + Forgot Password Row ──
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Checkbox + Label
+                          GestureDetector(
+                            onTap: () => setState(() => _rememberMe = !_rememberMe),
+                            child: Row(
                               children: [
-                                Expanded(child: Divider(color: Colors.grey.shade300)),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  child: Text(
-                                    'atau masuk dengan',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey.shade500,
+                                SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: Checkbox(
+                                    value: _rememberMe,
+                                    onChanged: (v) => setState(() => _rememberMe = v ?? false),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(4),
                                     ),
+                                    side: BorderSide(
+                                      color: Colors.grey.shade400,
+                                      width: 1.5,
+                                    ),
+                                    activeColor: AuthColors.bluePrimary,
+                                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    visualDensity: VisualDensity.compact,
                                   ),
                                 ),
-                                Expanded(child: Divider(color: Colors.grey.shade300)),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Ingat saya',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: AuthColors.textPrimary,
+                                  ),
+                                ),
                               ],
                             ),
-
-                            const SizedBox(height: 24),
-
-                            // ── Google Login Button ──
-                            GoogleSignInButton(
-                              isLoading: auth.isGoogleLoading,
-                              onTap: (auth.isLoginLoading || auth.isGoogleLoading) ? () {} : _handleGoogleLogin,
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 46),
-
-                    // ── Footer ──
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Belum punya akun? ',
-                          style: GoogleFonts.inter(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w500,
-                            color: AuthColors.footerGray,
-                            letterSpacing: -0.02 * 14.5,
                           ),
-                        ),
-                        AuthHoverLink(
-                          text: 'Daftar di sini',
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const RegisterScreen(),
+  
+                          // Forgot Password
+                          AuthHoverLink(
+                            text: 'Lupa password?',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const ForgotPasswordScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+  
+                      const SizedBox(height: 34),
+  
+                      // ── Login Button (Gradient) ──
+                      Consumer<AuthProvider>(
+                        builder: (context, auth, child) {
+                          return Column(
+                            children: [
+                              GradientButton(
+                                label: auth.isLoginLoading ? 'Loading...' : 'Login',
+                                onTap: (auth.isLoginLoading || auth.isGoogleLoading) ? () {} : _handleLogin,
                               ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 40),
-                  ],
+                              const SizedBox(height: 24),
+                              
+                              // Divider OR
+                              Row(
+                                children: [
+                                  Expanded(child: Divider(color: Colors.grey.shade300)),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                                    child: Text(
+                                      'atau masuk dengan',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.grey.shade500,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(child: Divider(color: Colors.grey.shade300)),
+                                ],
+                              ),
+  
+                              const SizedBox(height: 24),
+  
+                              // ── Google Login Button ──
+                              GoogleSignInButton(
+                                isLoading: auth.isGoogleLoading,
+                                onTap: (auth.isLoginLoading || auth.isGoogleLoading) ? () {} : _handleGoogleLogin,
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+  
+                      const SizedBox(height: 46),
+  
+                      // ── Footer ──
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Belum punya akun? ',
+                            style: GoogleFonts.inter(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w500,
+                              color: AuthColors.footerGray,
+                              letterSpacing: -0.02 * 14.5,
+                            ),
+                          ),
+                          AuthHoverLink(
+                            text: 'Daftar di sini',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const RegisterScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+  
+                      const SizedBox(height: 40),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

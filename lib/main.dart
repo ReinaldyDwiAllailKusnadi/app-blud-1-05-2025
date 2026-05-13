@@ -16,16 +16,26 @@ import 'providers/submission_provider.dart';
 import 'providers/recommendation_provider.dart';
 import 'core/services/cache_service.dart';
 import 'screens/auth/auth_wrapper.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Firebase
+  try {
+    await Firebase.initializeApp();
+    await NotificationService.initialize();
+  } catch (e) {
+    debugPrint('Firebase initialization failed: $e');
+  }
   
   // Transparan status bar
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      statusBarBrightness: Brightness.dark,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
       systemNavigationBarColor: Colors.white,
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
@@ -56,7 +66,7 @@ Future<void> main() async {
           create: (_) => EventProvider(eventService),
         ),
         ChangeNotifierProvider(
-          create: (_) => SubmissionProvider(submissionService, dioClient),
+          create: (_) => SubmissionProvider(submissionService),
         ),
         ChangeNotifierProvider(
           create: (_) => RecommendationProvider(recommendationService),

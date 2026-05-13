@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'shared_auth_widgets.dart';
 import 'new_password_screen.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/theme/app_theme.dart';
 
 class VerifyResetCodeScreen extends StatefulWidget {
   final String email;
@@ -64,97 +65,100 @@ class _VerifyResetCodeScreenState extends State<VerifyResetCodeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AuthColors.bgContainer,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Back Button
-              Padding(
-                padding: const EdgeInsets.only(left: 14, top: 10),
-                child: GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    child: Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      size: 20,
-                      color: Colors.grey.shade700,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: AppTheme.authSystemUiOverlayStyle,
+      child: Scaffold(
+        backgroundColor: AuthColors.bgContainer,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Back Button
+                Padding(
+                  padding: const EdgeInsets.only(left: 14, top: 10),
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      child: Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        size: 20,
+                        color: Colors.grey.shade700,
+                      ),
                     ),
                   ),
                 ),
-              ),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 26),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 20),
-                    const LogoBlud(),
-                    const SizedBox(height: 42),
-
-                    Text(
-                      'Verifikasi Kode',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w700,
-                        color: AuthColors.textPrimary,
-                        height: 1.1,
-                        letterSpacing: -0.03 * 30,
+  
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 26),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      const LogoBlud(),
+                      const SizedBox(height: 42),
+  
+                      Text(
+                        'Verifikasi Kode',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w700,
+                          color: AuthColors.textPrimary,
+                          height: 1.1,
+                          letterSpacing: -0.03 * 30,
+                        ),
                       ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    Text(
-                      'Masukkan kode 6 digit yang dikirim ke email Anda.',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: AuthColors.textSubtitle,
-                        height: 1.4,
-                        letterSpacing: -0.01 * 15,
+  
+                      const SizedBox(height: 12),
+  
+                      Text(
+                        'Masukkan kode 6 digit yang dikirim ke email Anda.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: AuthColors.textSubtitle,
+                          height: 1.4,
+                          letterSpacing: -0.01 * 15,
+                        ),
                       ),
-                    ),
-
-                    const SizedBox(height: 50),
-
-                    _AuthTextField(
-                      controller: _codeCtrl,
-                      hintText: 'Kode Reset (6 digit)',
-                      prefixIcon: Icons.pin_rounded,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(6),
-                      ],
-                    ),
-
-                    const SizedBox(height: 34),
-
-                    Consumer<AuthProvider>(
-                      builder: (context, auth, child) {
-                        return GradientButton(
-                          label: auth.isLoading ? 'Memverifikasi...' : 'Verifikasi Kode',
-                          onTap: auth.isLoading ? () {} : _handleVerifyCode,
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 40),
-
-                    AuthHoverLink(
-                      text: 'Kembali ke Login',
-                      onTap: () => Navigator.popUntil(context, (route) => route.isFirst),
-                    ),
-                  ],
+  
+                      const SizedBox(height: 50),
+  
+                      _AuthTextField(
+                        controller: _codeCtrl,
+                        hintText: 'Kode Reset (6 digit)',
+                        prefixIcon: Icons.pin_rounded,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(6),
+                        ],
+                      ),
+  
+                      const SizedBox(height: 34),
+  
+                      Consumer<AuthProvider>(
+                        builder: (context, auth, child) {
+                          return GradientButton(
+                            label: auth.isLoading ? 'Memverifikasi...' : 'Verifikasi Kode',
+                            onTap: auth.isLoading ? () {} : _handleVerifyCode,
+                          );
+                        },
+                      ),
+  
+                      const SizedBox(height: 40),
+  
+                      AuthHoverLink(
+                        text: 'Kembali ke Login',
+                        onTap: () => Navigator.popUntil(context, (route) => route.isFirst),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

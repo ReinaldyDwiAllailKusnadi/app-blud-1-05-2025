@@ -5,6 +5,7 @@ import '../services/auth_service.dart';
 import '../core/network/dio_client.dart';
 import '../core/providers/base_provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../services/notification_service.dart';
 
 class AuthProvider extends BaseProvider {
   final AuthService _authService;
@@ -34,6 +35,9 @@ class AuthProvider extends BaseProvider {
       await _dioClient.saveToken(token);
       _user = UserModel.fromJson(userData);
       
+      // Update FCM Token
+      await NotificationService.updateTokenOnServer();
+      
       _isLoginLoading = false;
       notifyListeners();
       return true;
@@ -59,6 +63,9 @@ class AuthProvider extends BaseProvider {
 
         await _dioClient.saveToken(token);
         _user = UserModel.fromJson(userData);
+        
+        // Update FCM Token
+        await NotificationService.updateTokenOnServer();
       } else {
         // Jika tidak ada token, berarti registrasi sukses tapi harus login manual
         _user = null;
@@ -113,6 +120,10 @@ class AuthProvider extends BaseProvider {
     try {
       final response = await _authService.getProfile();
       _user = UserModel.fromJson(response.data['data']);
+      
+      // Update FCM Token
+      await NotificationService.updateTokenOnServer();
+      
       notifyListeners();
       return true;
     } catch (e) {
@@ -160,6 +171,9 @@ class AuthProvider extends BaseProvider {
       // Simpan token Sanctum dan set user
       await _dioClient.saveToken(token);
       _user = UserModel.fromJson(userData);
+
+      // Update FCM Token
+      await NotificationService.updateTokenOnServer();
 
       _isGoogleLoading = false;
       notifyListeners();
