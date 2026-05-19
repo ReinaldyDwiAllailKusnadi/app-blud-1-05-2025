@@ -47,8 +47,11 @@ class EventProvider extends BaseProvider {
     setError(null);
 
     try {
+      debugPrint('Fetching schedules from API...');
       final response = await _eventService.getJadwal();
       final data = response.data;
+      debugPrint('Schedule response received: ${data != null ? "Success" : "Empty"}');
+      
       List rawList = [];
 
       // Penanganan response yang sangat fleksibel
@@ -69,12 +72,15 @@ class EventProvider extends BaseProvider {
           .map((e) => EventModel.fromJson(Map<String, dynamic>.from(e)))
           .toList();
 
+      debugPrint('Total schedules parsed: ${_events.length}');
+
       if (data is Map && data['data'] != null) {
         await CacheService.save('event_data', data['data']);
       } else if (rawList.isNotEmpty) {
         await CacheService.save('event_data', rawList);
       }
     } catch (e) {
+      debugPrint('Error fetching schedules: $e');
       handleDioError(e, defaultMessage: 'Gagal memuat jadwal event');
       if (_events.isEmpty) _loadFromCache();
     } finally {

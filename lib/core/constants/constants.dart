@@ -2,10 +2,10 @@ class ApiConstants {
   // Ganti dengan URL server Laravel kamu
   // Untuk testing lokal: 'http://10.0.2.2:8000/api' (Android emulator)
   // Untuk device fisik: 'http://IP_KOMPUTER:8000/api'
-  static const String baseUrl = 'https://bludtesting.my.id/api';
+  static const String baseUrl = 'https://bludpariwisata.com/api';
   
   // Ganti dengan URL storage Laravel
-  static const String storageUrl = 'https://bludtesting.my.id/storage';
+  static const String storageUrl = 'https://bludpariwisata.com/storage';
 }
 
 class AppStrings {
