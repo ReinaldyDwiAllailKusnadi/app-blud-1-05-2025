@@ -379,6 +379,12 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
                                 hint: 'Nama lengkap penanggung jawab',
                                 errorText: provider.fieldErrors['namePIC']?.first,
                                 onChanged: (v) => provider.clearFieldError('namePIC'),
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Nama PIC wajib diisi';
+                                  }
+                                  return null;
+                                },
                               ),
                               const SizedBox(height: 16),
                               _buildField(
@@ -594,6 +600,7 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
     List<TextInputFormatter>? inputFormatters,
     String? errorText,
     Function(String)? onChanged,
+    String? Function(String?)? validator,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -607,6 +614,7 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,
           onChanged: onChanged,
+          validator: validator,
           style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
           decoration: InputDecoration(
             hintText: hint,
@@ -621,6 +629,14 @@ class _SubmissionFormScreenState extends State<SubmissionFormScreen> {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14), 
               borderSide: BorderSide(color: errorText != null ? Colors.red : const Color(0xFF1461D2), width: 1.5),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Colors.red),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Colors.red, width: 1.5),
             ),
             errorText: errorText,
             errorStyle: const TextStyle(height: 0.8),

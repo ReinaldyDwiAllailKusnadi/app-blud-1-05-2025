@@ -64,10 +64,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   }
 
   void _handleSearch() {
-    if (_selectedDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Silakan pilih tanggal kegiatan')),
-      );
+    if (!_formKey.currentState!.validate()) {
       return;
     }
 
@@ -208,6 +205,12 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
               controller: _eventTypeController,
               hint: 'Contoh: seminar, bazar, outbound',
               icon: Icons.event_available_rounded,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Jenis kegiatan wajib diisi';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 18),
 
@@ -217,6 +220,16 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
               keyboardType: TextInputType.number,
               hint: 'Contoh: 150',
               icon: Icons.groups_outlined,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Jumlah peserta wajib diisi';
+                }
+                final parsed = int.tryParse(value);
+                if (parsed == null || parsed <= 0) {
+                  return 'Jumlah peserta harus lebih dari 0';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 18),
 
@@ -225,6 +238,12 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
               date: _selectedDate,
               onTap: () => _selectDate(context),
               icon: Icons.calendar_month_rounded,
+              validator: (value) {
+                if (value == null) {
+                  return 'Tanggal kegiatan wajib dipilih';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 18),
 
@@ -238,6 +257,17 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                 FilteringTextInputFormatter.digitsOnly,
                 RupiahInputFormatter(),
               ],
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Budget wajib diisi';
+                }
+                final cleanValue = value.replaceAll('.', '');
+                final parsed = double.tryParse(cleanValue);
+                if (parsed == null || parsed <= 0) {
+                  return 'Budget harus lebih dari 0';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 18),
 
@@ -246,6 +276,12 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
               controller: _facilitiesController,
               hint: 'Contoh: aula, kursi, sound system',
               icon: Icons.check_circle_outline_rounded,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Fasilitas wajib diisi';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 18),
 
@@ -256,6 +292,12 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
               hint: 'Pilih Preferensi Lokasi',
               icon: Icons.category_outlined,
               onChanged: (val) => setState(() => _selectedPreference = val),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Preferensi lokasi wajib dipilih';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 32),
 

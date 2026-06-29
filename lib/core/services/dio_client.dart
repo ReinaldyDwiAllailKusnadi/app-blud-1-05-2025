@@ -52,6 +52,11 @@ class DioClient {
     return _dio.post(path, data: data);
   }
 
+  // PUT request (JSON)
+  Future<Response> put(String path, {dynamic data}) {
+    return _dio.put(path, data: data);
+  }
+
   // POST request (multipart/form-data)
   Future<Response> postMultipart(String path, {required FormData data}) {
     return _dio.post(

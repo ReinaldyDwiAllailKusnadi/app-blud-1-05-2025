@@ -182,7 +182,7 @@ class AuthProvider extends ChangeNotifier {
         data['password'] = password;
       }
 
-      final response = await _dio.post('/profile/update', data: data);
+      final response = await _dio.put('/profile', data: data);
 
       if (response.data['success'] == true) {
         _user = UserModel.fromJson(response.data['data']);

@@ -158,6 +158,14 @@ class AppDropdownField extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
               borderSide: const BorderSide(color: AppTheme.navBlue, width: 2),
             ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+              borderSide: const BorderSide(color: AppTheme.errorColor),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+              borderSide: const BorderSide(color: AppTheme.errorColor, width: 2),
+            ),
           ),
           selectedItemBuilder: (context) {
             return items.map((String item) {
@@ -180,66 +188,100 @@ class AppDropdownField extends StatelessWidget {
   }
 }
 
-class AppDateField extends StatelessWidget {
+class AppDateField extends FormField<DateTime> {
   final String label;
   final DateTime? date;
   final VoidCallback onTap;
   final IconData icon;
 
-  const AppDateField({
+  AppDateField({
     super.key,
     required this.label,
-    DateTime? date,
+    this.date,
     required this.onTap,
     this.icon = Icons.calendar_month_rounded,
     DateTime? value,
-  }) : date = date ?? value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
-            ),
-          ),
-        ),
-        InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-              border: Border.all(color: AppTheme.dividerColor),
-            ),
-            child: Row(
+    super.validator,
+  }) : super(
+          initialValue: date ?? value,
+          builder: (FormFieldState<DateTime> state) {
+            final hasError = state.hasError;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(icon, color: AppTheme.navBlue, size: 22),
-                const SizedBox(width: 12),
-                Expanded(
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, bottom: 8),
                   child: Text(
-                    date != null ? DateFormat('dd/MM/yyyy').format(date!) : 'Pilih Tanggal',
+                    label,
                     style: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: date != null ? AppTheme.textPrimary : AppTheme.textLight,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
                 ),
+                InkWell(
+                  onTap: onTap,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                      border: Border.all(
+                        color: hasError ? AppTheme.errorColor : AppTheme.dividerColor,
+                        width: hasError ? 2 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(icon, color: AppTheme.navBlue, size: 22),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            state.value != null ? DateFormat('dd/MM/yyyy').format(state.value!) : 'Pilih Tanggal',
+                            style: GoogleFonts.inter(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: state.value != null ? AppTheme.textPrimary : AppTheme.textLight,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (hasError)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, top: 8),
+                    child: Text(
+                      state.errorText ?? '',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppTheme.errorColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
               ],
-            ),
-          ),
-        ),
-      ],
-    );
+            );
+          },
+        );
+
+  @override
+  FormFieldState<DateTime> createState() => _AppDateFieldState();
+}
+
+class _AppDateFieldState extends FormFieldState<DateTime> {
+  @override
+  AppDateField get widget => super.widget as AppDateField;
+
+  @override
+  void didUpdateWidget(FormField<DateTime> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldAppDateField = oldWidget as AppDateField;
+    if (widget.date != oldAppDateField.date) {
+      setValue(widget.date);
+    }
   }
 }

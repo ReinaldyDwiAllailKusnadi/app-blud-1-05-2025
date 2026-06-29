@@ -37,7 +37,7 @@ class AuthService {
     required String phone,
     required String email,
   }) async {
-    return await _dioClient.post('/profile/update', data: {
+    return await _dioClient.put('/profile', data: {
       'name': name,
       'username': username,
       'phone': phone,
