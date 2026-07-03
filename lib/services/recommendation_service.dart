@@ -10,7 +10,6 @@ class RecommendationService {
     String? eventType,
     int? participants,
     required String date,
-    double? budget,
     List<String>? facilities,
     String? preference,
   }) async {
@@ -18,7 +17,6 @@ class RecommendationService {
       'event_type': eventType,
       'participants': participants,
       'date': date,
-      'budget': budget,
       'facilities': facilities,
       'preference': preference,
     });

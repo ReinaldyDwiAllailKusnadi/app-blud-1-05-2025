@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:intl/intl.dart';
 import '../../providers/content_provider.dart';
 import '../../models/content_model.dart';
 import '../booking/submission_form_screen.dart';
@@ -40,21 +39,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
     }
   }
 
-  String _formatCurrency(String? price) {
-    if (price == null || price.isEmpty || price == '-') return '-';
-    try {
-      final cleanPrice = price.replaceAll(RegExp(r'[^0-9]'), '');
-      if (cleanPrice.isEmpty) return '-';
-      final value = int.parse(cleanPrice);
-      return NumberFormat.currency(
-        locale: 'id_ID',
-        symbol: 'Rp',
-        decimalDigits: 0,
-      ).format(value).replaceAll(',', '.');
-    } catch (e) {
-      return price;
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -216,12 +201,6 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                 icon: Icons.access_time_filled_rounded,
                 label: 'Buka',
                 value: '${dest.openTime ?? '08:00'} - ${dest.closeTime ?? '22:00'} WIB',
-                width: (MediaQuery.of(context).size.width - 60) / 2,
-              ),
-              _buildInfoItem(
-                icon: Icons.payments_rounded,
-                label: 'Mulai dari',
-                value: _formatCurrency(dest.priceWeekday),
                 width: (MediaQuery.of(context).size.width - 60) / 2,
               ),
             ],

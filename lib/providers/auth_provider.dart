@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:dio/dio.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
@@ -178,13 +179,38 @@ class AuthProvider extends BaseProvider {
       _isGoogleLoading = false;
       notifyListeners();
       return true;
-    } catch (e) {
-      debugPrint('Google Login Error: $e');
-      if (e is DioException) {
+    } catch (e, stackTrace) {
+      debugPrint('================ GOOGLE SIGN-IN AUDIT LOGS ================');
+      debugPrint('Exception Type: ${e.runtimeType}');
+      debugPrint('Error: $e');
+      debugPrint('StackTrace:\n$stackTrace');
+
+      if (e is PlatformException) {
+        debugPrint('[GoogleSignIn / OAuth / PlatformException Error]');
+        debugPrint('  Code: ${e.code}');
+        debugPrint('  Message: ${e.message}');
+        debugPrint('  Details: ${e.details}');
+        
+        if (e.code == 'sign_in_failed') {
+          debugPrint('  --> Penyebab Umum ApiException 10 (DEVELOPER_ERROR):');
+          debugPrint('      1. SHA-1 Fingerprint dari debug/release keystore belum terdaftar di Firebase Console.');
+          debugPrint('      2. Email dukungan (Support Email) di Project Settings Firebase Console kosong.');
+          debugPrint('      3. Package name di Firebase Console tidak cocok dengan applicationId di build.gradle.kts.');
+          debugPrint('      4. Client ID OAuth di GCP Console tidak cocok atau dinonaktifkan.');
+        }
+        
+        setError('Gagal login Google (Platform Error): ${e.message} (Code: ${e.code}, Details: ${e.details})');
+      } else if (e is DioException) {
+        debugPrint('[DioException / Backend / API Error]');
+        debugPrint('  Path: ${e.requestOptions.path}');
+        debugPrint('  Response Status Code: ${e.response?.statusCode}');
+        debugPrint('  Response Data: ${e.response?.data}');
         handleDioError(e, defaultMessage: 'Gagal login ke server BLUD. Silakan coba lagi.');
       } else {
+        debugPrint('[Unknown Error]');
         setError('Gagal login Google: $e');
       }
+      debugPrint('===========================================================');
       _isGoogleLoading = false;
       notifyListeners();
       return false;

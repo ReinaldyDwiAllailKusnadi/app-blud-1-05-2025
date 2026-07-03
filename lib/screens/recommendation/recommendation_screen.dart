@@ -22,7 +22,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   
   final _eventTypeController = TextEditingController();
   final _participantsController = TextEditingController();
-  final _budgetController = TextEditingController();
   final _facilitiesController = TextEditingController();
   
   DateTime? _selectedDate;
@@ -32,7 +31,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   void dispose() {
     _eventTypeController.dispose();
     _participantsController.dispose();
-    _budgetController.dispose();
     _facilitiesController.dispose();
     super.dispose();
   }
@@ -70,10 +68,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
 
     final participants = int.tryParse(_participantsController.text);
     
-    // Clean budget string from dots before parsing
-    final cleanBudget = _budgetController.text.replaceAll('.', '');
-    final budget = double.tryParse(cleanBudget);
-    
     List<String>? facilities;
     if (_facilitiesController.text.isNotEmpty) {
       facilities = _facilitiesController.text
@@ -87,20 +81,12 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       eventType: _eventTypeController.text.isEmpty ? null : _eventTypeController.text,
       participants: participants,
       date: DateFormat('yyyy-MM-dd').format(_selectedDate!),
-      budget: budget,
       facilities: facilities,
       preference: _selectedPreference,
     );
   }
 
-  String _formatCurrency(double? amount) {
-    if (amount == null) return 'Hubungi Admin';
-    return NumberFormat.currency(
-      locale: 'id_ID',
-      symbol: 'Rp',
-      decimalDigits: 0,
-    ).format(amount);
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -245,29 +231,14 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                 return null;
               },
             ),
-            const SizedBox(height: 18),
-
-            AppTextField(
-              label: 'Budget (Rp)',
-              controller: _budgetController,
-              keyboardType: TextInputType.number,
-              hint: 'Contoh: 2.000.000',
-              icon: Icons.payments_outlined,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                RupiahInputFormatter(),
-              ],
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Budget wajib diisi';
-                }
-                final cleanValue = value.replaceAll('.', '');
-                final parsed = double.tryParse(cleanValue);
-                if (parsed == null || parsed <= 0) {
-                  return 'Budget harus lebih dari 0';
-                }
-                return null;
-              },
+            const SizedBox(height: 6),
+            Text(
+              '* Tanggal kegiatan hanya digunakan untuk memverifikasi ketersediaan jadwal lokasi sewa.',
+              style: GoogleFonts.inter(
+                fontSize: 11.5,
+                color: AppTheme.textSecondary,
+                fontStyle: FontStyle.italic,
+              ),
             ),
             const SizedBox(height: 18),
 
@@ -400,21 +371,43 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          item.status,
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: statusColor,
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: item.available ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              item.available ? 'Tersedia' : 'Tidak Tersedia',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: item.available ? Colors.green : Colors.red,
+                              ),
+                            ),
                           ),
-                        ),
+                          if (item.available)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: statusColor.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                item.status,
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: statusColor,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ],
                   ),
@@ -458,7 +451,6 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildInfoRow(Icons.payments_outlined, 'Harga Sewa', _formatCurrency(item.price)),
                 _buildInfoRow(Icons.groups_outlined, 'Kapasitas', '${item.capacity ?? "-"} orang'),
                 _buildInfoRow(Icons.category_outlined, 'Tipe Area', '${item.venueType ?? "-"} (${item.isIndoor ? "Indoor" : ""} ${item.isOutdoor ? "Outdoor" : ""})'),
                 
@@ -493,22 +485,59 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                   style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
                 ),
                 const SizedBox(height: 6),
-                ...item.reasons.map((r) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.check_circle_outline_rounded, size: 14, color: AppTheme.successColor),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          r,
-                          style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary),
+                ...item.reasons.map((reason) {
+                  final String text = reason.message;
+                  final bool isPositive = reason.status;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          isPositive ? Icons.check_circle_outline_rounded : Icons.cancel_outlined,
+                          size: 14,
+                          color: isPositive ? AppTheme.successColor : AppTheme.errorColor,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            text,
+                            style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+
+                if (!item.available) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.red.withValues(alpha: 0.15)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline_rounded, color: Colors.red, size: 16),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Lokasi tidak tersedia pada tanggal yang dipilih',
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.red.shade700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                )),
+                ],
 
                 const SizedBox(height: 20),
                 SizedBox(
@@ -529,10 +558,23 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                         }
                       : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: item.available ? AppTheme.navBlue : Colors.grey,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      backgroundColor: item.available ? AppTheme.navBlue : Colors.grey.shade400,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      disabledBackgroundColor: Colors.grey.shade300,
+                      disabledForegroundColor: Colors.grey.shade600,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    child: Text(item.available ? 'Ajukan Sewa' : 'Tidak Tersedia'),
+                    child: Text(
+                      item.available ? 'Ajukan Sewa' : 'Tidak Tersedia',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -574,6 +616,7 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
       ),
     );
   }
+
 
   Color _getStatusColor(String status) {
     switch (status) {
@@ -629,29 +672,4 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   }
 }
 
-class RupiahInputFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue, TextEditingValue newValue) {
-    if (newValue.text.isEmpty) {
-      return newValue.copyWith(text: '');
-    }
 
-    // Ambil hanya angka
-    String newText = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
-
-    if (newText.isEmpty) return newValue.copyWith(text: '');
-
-    final int value = int.parse(newText);
-    final String formatted = NumberFormat.currency(
-      locale: 'id_ID',
-      symbol: '',
-      decimalDigits: 0,
-    ).format(value).trim();
-
-    return newValue.copyWith(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
-    );
-  }
-}

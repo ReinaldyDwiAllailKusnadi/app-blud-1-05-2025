@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "257992216746-h44rgksasv5k0fntfm2ddkce4lvb51th.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.blud.pariwisata.blud_flutter",
+            "certificate_hash": "190c853b6e9d0cf33cf71600e1aa7971894de8e5"
+          }
+        },
+        {
           "client_id": "257992216746-s3ugartrlqilrnv70l1hhn1fpdt9r5ab.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

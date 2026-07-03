@@ -15,7 +15,6 @@ class RecommendationProvider extends BaseProvider {
     String? eventType,
     int? participants,
     required String date,
-    double? budget,
     List<String>? facilities,
     String? preference,
   }) async {
@@ -29,7 +28,6 @@ class RecommendationProvider extends BaseProvider {
         eventType: eventType,
         participants: participants,
         date: date,
-        budget: budget,
         facilities: facilities,
         preference: preference,
       );

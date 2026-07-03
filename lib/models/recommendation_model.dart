@@ -1,3 +1,23 @@
+class RecommendationReason {
+  final String type;
+  final bool status;
+  final String message;
+
+  RecommendationReason({
+    required this.type,
+    required this.status,
+    required this.message,
+  });
+
+  factory RecommendationReason.fromJson(Map<String, dynamic> json) {
+    return RecommendationReason(
+      type: json['type'] ?? '',
+      status: json['status'] == true || json['status'] == 1,
+      message: json['message'] ?? '',
+    );
+  }
+}
+
 class RecommendationModel {
   final int id;
   final String name;
@@ -5,13 +25,12 @@ class RecommendationModel {
   final double score;
   final String status;
   final bool available;
-  final double? price;
   final int? capacity;
   final String? venueType;
   final bool isIndoor;
   final bool isOutdoor;
   final List<String> matchedFacilities;
-  final List<String> reasons;
+  final List<RecommendationReason> reasons;
   final String? image;
 
   RecommendationModel({
@@ -21,7 +40,6 @@ class RecommendationModel {
     required this.score,
     required this.status,
     required this.available,
-    this.price,
     this.capacity,
     this.venueType,
     required this.isIndoor,
@@ -56,13 +74,15 @@ class RecommendationModel {
       score: toDouble(json['score']),
       status: json['status'] ?? 'Kurang Direkomendasikan',
       available: json['available'] ?? false,
-      price: json['price'] != null ? toDouble(json['price']) : null,
       capacity: json['capacity'] != null ? toInt(json['capacity']) : null,
       venueType: json['venue_type'],
       isIndoor: json['is_indoor'] == true || json['is_indoor'] == 1,
       isOutdoor: json['is_outdoor'] == true || json['is_outdoor'] == 1,
       matchedFacilities: (json['matched_facilities'] as List?)?.map((e) => e.toString()).toList() ?? [],
-      reasons: (json['reasons'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      reasons: (json['reasons'] as List?)
+              ?.map((e) => RecommendationReason.fromJson(Map<String, dynamic>.from(e)))
+              .toList() ??
+          [],
       image: json['image'],
     );
   }

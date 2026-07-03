@@ -1,0 +1,290 @@
+# DRAF LAPORAN SKRIPSI - SISTEM PENDUKUNG KEPUTUSAN REKOMENDASI LOKASI WISATA
+
+Dokumen ini berisi draf materi laporan Tugas Akhir (Skripsi) mengenai rancangan dan implementasi fitur **Knowledge-Based Recommendation** pada platform BLUD UPT Teratai Mas (BLUD Pariwisata Kabupaten Banyumas) setelah revisi peniadaan kriteria budget.
+
+---
+
+# BAGIAN I: RANCANGAN METODE PENELITIAN (UNTUK BAB III)
+
+## 3.4. Rancangan Sistem Pendukung Keputusan (SPK) Rekomendasi Lokasi
+
+Sistem rekomendasi lokasi wisata pada platform ini dirancang menggunakan metode **Knowledge-Based Recommendation** dengan pendekatan **Similarity (Kemiripan)**. Pendekatan ini mencocokkan kriteria kebutuhan spesifik yang diajukan oleh pengguna (*knowledge requirement*) dengan karakteristik atau fitur spesifikasi lokasi wisata (*knowledge domain*) yang tercatat di database sistem.
+
+Pada sistem ini, kriteria keuangan (**budget**) tidak lagi digunakan sebagai kriteria pencocokan similarity. Hal ini dikarenakan harga sewa properti di BLUD UPT Teratai Mas bersifat dinamis dan baru diputuskan secara resmi oleh pihak pengelola pasca-proses verifikasi administrasi pengajuan sewa. Dengan demikian, sistem pendukung keputusan berfokus sepenuhnya pada kriteria fisik, kapasitas operasional, dan preferensi fungsional lokasi.
+
+### 3.4.1. Kriteria dan Pembobotan SPK
+Sistem rekomendasi menggunakan 4 (empat) kriteria utama untuk menghitung nilai kemiripan lokasi. Setiap kriteria memiliki nilai bobot ($W$) yang ditentukan berdasarkan tingkat kepentingannya terhadap keberhasilan penyelenggaraan kegiatan:
+
+| Kode | Kriteria | Nilai Bobot ($W$) | Deskripsi Kriteria |
+| :--- | :--- | :---: | :--- |
+| $C_1$ | Jenis Kegiatan | $0.35$ | Kecocokan jenis kegiatan terhadap tipe atau karakteristik area lokasi (Indoor / Outdoor). |
+| $C_2$ | Jumlah Peserta | $0.35$ | Kesesuaian daya tampung maksimum (kapasitas fisik) lokasi dengan estimasi jumlah peserta kegiatan. |
+| $C_3$ | Fasilitas Dibutuhkan | $0.10$ | Persentase pemenuhan daftar fasilitas yang diminta pengguna oleh fasilitas yang tersedia di lokasi. |
+| $C_4$ | Preferensi Lokasi | $0.20$ | Kesesuaian tipe lokasi secara spesifik berdasarkan preferensi eksplisit pengguna (Indoor / Outdoor). |
+| | **Total** | **$1.00$** | |
+
+### 3.4.2. Penilaian Skor Sub-Kriteria ($S$)
+
+Masing-masing kriteria dihitung nilainya menggunakan fungsi penilaian sub-kriteria berikut:
+
+#### A. Skor Jenis Kegiatan ($S_{C1}$)
+Skor ini mengukur tingkat kesesuaian antara sifat jenis kegiatan pengguna dengan karakteristik fisik utama lokasi. Jenis kegiatan dikelompokkan menjadi dua orientasi utama:
+- **Indoor-oriented**: Seminar, Rapat, Workshop, Pernikahan Indoor, dll.
+- **Outdoor-oriented**: Outbound, Bazar, Pentas Seni, Camping, dll.
+
+Penilaian skor ditentukan dengan aturan berikut:
+*   Jika jenis kegiatan berorientasi *Indoor* diadakan di lokasi yang memiliki tipe *Indoor*, atau jenis kegiatan berorientasi *Outdoor* diadakan di lokasi yang memiliki tipe *Outdoor*:
+    $$S_{C1} = 1.0$$
+*   Jika jenis kegiatan yang diajukan berlawanan secara kontras dengan tipe lokasi (misalnya kegiatan outbound di aula tertutup murni):
+    $$S_{C1} = 0.3$$
+*   Untuk kondisi kombinasi netral lainnya (lokasi semi-outdoor/multi-fungsi):
+    $$S_{C1} = 0.8$$
+
+#### B. Skor Jumlah Peserta / Kapasitas ($S_{C2}$)
+Mengukur apakah kapasitas maksimal lokasi sewa ($Cap_{loc}$) mampu menampung jumlah peserta yang direncanakan oleh pengguna ($P_{req}$).
+*   Jika kapasitas lokasi mencukupi ($Cap_{loc} \geq P_{req}$):
+    $$S_{C2} = 1.0$$
+*   Jika kapasitas lokasi kurang dari jumlah peserta ($Cap_{loc} < P_{req}$), skor dihitung secara proporsional berdasarkan rasio daya tampung yang tersedia dengan batas bawah $0$:
+    $$S_{C2} = \max\left(0, \frac{Cap_{loc}}{P_{req}}\right)$$
+
+#### C. Skor Fasilitas Dibutuhkan ($S_{C3}$)
+Mengukur persentase ketersediaan fasilitas yang diminta pengguna ($F_{req}$) terhadap daftar fasilitas yang disediakan oleh lokasi ($F_{loc}$):
+$$S_{C3} = \frac{\text{Jumlah Fasilitas yang Cocok}}{\text{Jumlah Fasilitas yang Diminta } (F_{req})}$$
+
+#### D. Skor Preferensi Lokasi ($S_{C4}$)
+Mengukur kesesuaian tipe fisik lokasi dengan pilihan preferensi eksplisit pengguna (apakah pengguna secara khusus meminta area Indoor atau Outdoor):
+*   Jika tipe lokasi sesuai dengan preferensi pengguna:
+    $$S_{C4} = 1.0$$
+*   Jika tipe lokasi tidak sesuai dengan preferensi pengguna:
+    $$S_{C4} = 0.0$$
+
+### 3.4.3. Perhitungan Nilai Kemiripan Akhir (Similarity Score)
+Skor kemiripan total ($Sim$) diperoleh dari penjumlahan berbobot dari seluruh sub-kriteria:
+$$Sim = (0.35 \times S_{C1}) + (0.35 \times S_{C2}) + (0.10 \times S_{C3}) + (0.20 \times S_{C4})$$
+
+Nilai kemiripan akhir kemudian dikonversi ke dalam persentase kemiripan ($Sim_{\%}$):
+$$Sim_{\%} = Sim \times 100\%$$
+
+### 3.4.4. Constraint Filtering (Penyaringan Ketersediaan Lokasi)
+Setelah skor kemiripan fisik dihitung, sistem menerapkan aturan penyaringan ketersediaan tanggal kegiatan ($D_{req}$). Tanggal tidak memengaruhi nilai skor similarity, melainkan digunakan sebagai pembatas operasional (*hard constraint*):
+1.  Sistem melakukan pencarian pada database untuk memeriksa apakah ada agenda acara (`events`) atau permohonan sewa terverifikasi (`submissions` dengan status *approved*) yang bentrok dengan tanggal kegiatan ($D_{req}$) pada lokasi terkait.
+2.  Jika lokasi **tersedia**, lokasi akan diklasifikasikan ke dalam kategori rekomendasi berikut:
+    *   $85\% \leq Sim_{\%} \leq 100\%$: **Sangat Direkomendasikan**
+    *   $70\% \leq Sim_{\%} < 85\%$: **Direkomendasikan**
+    *   $50\% \leq Sim_{\%}/ < 70\%$: **Cukup Sesuai**
+    *   $Sim_{\%} < 50\%$: **Kurang Direkomendasikan**
+3.  Jika lokasi **tidak tersedia** (terjadi bentrok jadwal), nilai skor similarity tetap dipertahankan sesuai hasil perhitungan fisik, namun statusnya secara otomatis diubah menjadi **"Tidak Tersedia"** dan variabel boolean `available` diatur menjadi `false`.
+
+---
+
+# BAGIAN II: HASIL DAN PEMBAHASAN (UNTUK BAB IV)
+
+## 4.2. Implementasi Sistem Pendukung Keputusan
+
+### 4.2.3. Implementasi Perhitungan SPK di Backend Laravel
+Logika perhitungan similarity dan evaluasi jadwal diimplementasikan pada backend Laravel melalui kelas layanan khusus bernama `RecommendationService.php`. Kelas ini memisahkan kueri database dengan proses matematis SPK agar kalkulasi berjalan cepat.
+
+Berikut adalah potongan kode utama implementasi fungsi perhitungan kecocokan lokasi:
+
+```php
+namespace App\Services;
+
+use App\Models\Content;
+use App\Models\Event;
+use App\Models\Submission;
+use Carbon\Carbon;
+
+class RecommendationService
+{
+    public function recommend($criteria)
+    {
+        $eventType = $criteria['event_type'] ?? '';
+        $participants = intval($criteria['participants'] ?? 0);
+        $reqDate = $criteria['date'] ?? null;
+        $reqFacilities = $criteria['facilities'] ?? [];
+        $preference = $criteria['preference'] ?? '';
+
+        $locations = Content::all();
+        $results = [];
+
+        foreach ($locations as $loc) {
+            // 1. Skor Jenis Kegiatan (C1 - Bobot 35%)
+            $scoreEventType = 0.8; // Default netral
+            $isIndoorEvent = in_array(strtolower($eventType), ['seminar', 'rapat', 'workshop', 'pernikahan indoor']);
+            $isOutdoorEvent = in_array(strtolower($eventType), ['outbound', 'bazar', 'pentas', 'camping']);
+
+            if (($isIndoorEvent && $loc->is_indoor) || ($isOutdoorEvent && $loc->is_outdoor)) {
+                $scoreEventType = 1.0;
+            } elseif (($isIndoorEvent && !$loc->is_indoor && $loc->is_outdoor) || ($isOutdoorEvent && !$loc->is_outdoor && $loc->is_indoor)) {
+                $scoreEventType = 0.3; // Kontras
+            }
+
+            // 2. Skor Jumlah Peserta (C2 - Bobot 35%)
+            $scoreParticipants = 1.0;
+            if ($loc->capacity < $participants) {
+                $scoreParticipants = $participants > 0 ? ($loc->capacity / $participants) : 0;
+            }
+
+            // 3. Skor Fasilitas (C3 - Bobot 10%)
+            $scoreFacilities = 0.0;
+            $matchedFacilities = [];
+            $locFacilities = array_map('trim', explode(',', strtolower($loc->facilities)));
+
+            if (!empty($reqFacilities)) {
+                $matchCount = 0;
+                foreach ($reqFacilities as $facility) {
+                    if (in_array(strtolower(trim($facility)), $locFacilities)) {
+                        $matchCount++;
+                        $matchedFacilities[] = trim($facility);
+                    }
+                }
+                $scoreFacilities = $matchCount / count($reqFacilities);
+            }
+
+            // 4. Skor Preferensi Lokasi (C4 - Bobot 20%)
+            $scorePreference = 0.0;
+            if (strtolower($preference) == 'indoor' && $loc->is_indoor) {
+                $scorePreference = 1.0;
+            } elseif (strtolower($preference) == 'outdoor' && $loc->is_outdoor) {
+                $scorePreference = 1.0;
+            }
+
+            // Hitung Nilai Akhir Similarity (Total 100%)
+            $similarity = ($scoreEventType * 0.35) + ($scoreParticipants * 0.35) + ($scoreFacilities * 0.10) + ($scorePreference * 0.20);
+            $similarityPercentage = round($similarity * 100, 1);
+
+            // Cek Ketersediaan Tanggal (Constraint)
+            $isAvailable = true;
+            if ($reqDate) {
+                $formattedDate = Carbon::parse($reqDate)->format('Y-m-d');
+                
+                $conflictEvent = Event::where('location', $loc->name)
+                    ->whereDate('start_date', '<=', $formattedDate)
+                    ->whereDate('end_date', '>=', $formattedDate)
+                    ->exists();
+
+                $conflictSub = Submission::where('location', $loc->name)
+                    ->where('status', 'approved')
+                    ->whereDate('start_date', '<=', $formattedDate)
+                    ->whereDate('end_date', '>=', $formattedDate)
+                    ->exists();
+
+                if ($conflictEvent || $conflictSub) {
+                    $isAvailable = false;
+                }
+            }
+
+            // Tentukan Label Status Klasifikasi
+            if (!$isAvailable) {
+                $status = 'Tidak Tersedia';
+            } else {
+                if ($similarityPercentage >= 85) {
+                    $status = 'Sangat Direkomendasikan';
+                } elseif ($similarityPercentage >= 70) {
+                    $status = 'Direkomendasikan';
+                } elseif ($similarityPercentage >= 50) {
+                    $status = 'Cukup Sesuai';
+                } else {
+                    $status = 'Kurang Direkomendasikan';
+                }
+            }
+
+            // Bentuk Alasan Rekomendasi Secara Dinamis
+            $reasons = [];
+            $reasons[] = [
+                'type' => 'date',
+                'status' => $isAvailable,
+                'message' => $isAvailable 
+                    ? 'Lokasi tersedia pada tanggal yang dipilih' 
+                    : 'Lokasi tidak tersedia (sudah dipesan oleh acara lain)'
+            ];
+            $reasons[] = [
+                'type' => 'event',
+                'status' => $scoreEventType >= 0.8,
+                'message' => $scoreEventType >= 0.8 
+                    ? 'Karakteristik lokasi sesuai dengan jenis kegiatan Anda' 
+                    : 'Tipe area lokasi kurang cocok untuk jenis kegiatan ini'
+            ];
+            $reasons[] = [
+                'type' => 'capacity',
+                'status' => $loc->capacity >= $participants,
+                'message' => $loc->capacity >= $participants 
+                    ? "Kapasitas lokasi ($loc->capacity orang) mencukupi kebutuhan ($participants orang)" 
+                    : "Kapasitas lokasi ($loc->capacity orang) lebih kecil dari jumlah peserta ($participants orang)"
+            ];
+            $reasons[] = [
+                'type' => 'facilities',
+                'status' => $scoreFacilities > 0.5,
+                'message' => "Fasilitas cocok " . count($matchedFacilities) . " dari " . count($reqFacilities) . " yang diminta"
+            ];
+            $reasons[] = [
+                'type' => 'preference',
+                'status' => $scorePreference == 1.0,
+                'message' => $scorePreference == 1.0 
+                    ? "Sesuai dengan preferensi area " . ucfirst($preference) 
+                    : "Tipe area lokasi tidak sesuai preferensi " . ucfirst($preference)
+            ];
+
+            $results[] = [
+                'id' => $loc->id,
+                'name' => $loc->name,
+                'slug' => $loc->slug,
+                'score' => $similarityPercentage,
+                'status' => $status,
+                'available' => $isAvailable,
+                'capacity' => $loc->capacity,
+                'image' => $loc->image,
+                'reasons' => $reasons
+            ];
+        }
+
+        // Urutkan berdasarkan skor tertinggi
+        usort($results, function ($a, $b) {
+            return $b['score'] <=> $a['score'];
+        });
+
+        return $results;
+    }
+}
+```
+
+### 4.2.6. Integrasi dan Tampilan Hasil Rekomendasi di Flutter
+Di sisi klien mobile (Flutter), aplikasi menerima respons JSON yang berisi daftar alternatif lengkap dengan persentase skor kecocokan dan detail penjelasan kriteria (*reasons*). 
+
+Model data diatur melalui kelas `RecommendationModel` yang tidak lagi memuat parameter `price`, sehingga tidak memicu error *null pointer exception* karena respons API yang bersih dari informasi harga sewa awal.
+
+Format data respons JSON yang terintegrasi:
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "Menara Pandang Teratai",
+      "slug": "menara-pandang-teratai",
+      "score": 96.7,
+      "status": "Sangat Direkomendasikan",
+      "available": true,
+      "capacity": 150,
+      "image": "assets/img/menara.png",
+      "reasons": [
+        {
+          "type": "date",
+          "status": true,
+          "message": "Lokasi tersedia pada tanggal yang dipilih"
+        },
+        {
+          "type": "event",
+          "status": true,
+          "message": "Karakteristik lokasi sesuai dengan jenis kegiatan Anda"
+        }
+      ]
+    }
+  ]
+}
+```
+
+Visualisasi pada aplikasi mobile diatur secara dinamis:
+- Jika `available` bernilai `false`, kartu rekomendasi menampilkan badge berwarna merah **"Tidak Tersedia"** dan menonaktifkan tombol pengajuan sewa (*booking button disabled*).
+- Ikon centang hijau (`✓`) diberikan untuk status alasan `true` dan ikon silang merah (`✗`) untuk status alasan `false` secara langsung berdasarkan array objek `reasons` yang dikirim dari backend Laravel.
