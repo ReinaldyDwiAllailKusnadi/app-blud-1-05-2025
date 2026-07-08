@@ -142,7 +142,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         builder: (context, auth, child) {
                           return GradientButton(
                             label: auth.isLoading ? 'Mengirim...' : 'Kirim Kode',
-                            onTap: auth.isLoading ? () {} : _handleForgotPassword,
+                            onTap: auth.isLoading ? null : _handleForgotPassword,
                           );
                         },
                       ),

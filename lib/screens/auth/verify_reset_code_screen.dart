@@ -143,7 +143,7 @@ class _VerifyResetCodeScreenState extends State<VerifyResetCodeScreen> {
                         builder: (context, auth, child) {
                           return GradientButton(
                             label: auth.isLoading ? 'Memverifikasi...' : 'Verifikasi Kode',
-                            onTap: auth.isLoading ? () {} : _handleVerifyCode,
+                            onTap: auth.isLoading ? null : _handleVerifyCode,
                           );
                         },
                       ),

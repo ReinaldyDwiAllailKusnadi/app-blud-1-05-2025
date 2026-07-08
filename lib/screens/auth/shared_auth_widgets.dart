@@ -92,13 +92,13 @@ class _PressableState extends State<Pressable> {
 // ═══════════════════════════════════════════════════════════
 class GradientButton extends StatelessWidget {
   final String label;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final Widget? icon;
 
   const GradientButton({
     super.key,
     required this.label,
-    required this.onTap,
+    this.onTap,
     this.icon,
   });
 
@@ -106,37 +106,40 @@ class GradientButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Pressable(
       onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        height: 54,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AuthColors.blueGradientStart, AuthColors.blueGradientEnd],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
-          borderRadius: BorderRadius.circular(999),
-          boxShadow: [
-            BoxShadow(
-              color: AuthColors.bluePrimary.withValues(alpha: 0.25),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
+      child: Opacity(
+        opacity: onTap == null ? 0.65 : 1.0,
+        child: Container(
+          width: double.infinity,
+          height: 54,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [AuthColors.blueGradientStart, AuthColors.blueGradientEnd],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
             ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (icon != null) ...[icon!, const SizedBox(width: 10)],
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 15.5,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
+            borderRadius: BorderRadius.circular(999),
+            boxShadow: [
+              BoxShadow(
+                color: AuthColors.bluePrimary.withValues(alpha: 0.25),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
               ),
-            ),
-          ],
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (icon != null) ...[icon!, const SizedBox(width: 10)],
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

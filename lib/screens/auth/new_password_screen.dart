@@ -184,7 +184,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                         builder: (context, auth, child) {
                           return GradientButton(
                             label: auth.isLoading ? 'Memproses...' : 'Ubah Password',
-                            onTap: auth.isLoading ? () {} : _handleUpdatePassword,
+                            onTap: auth.isLoading ? null : _handleUpdatePassword,
                           );
                         },
                       ),

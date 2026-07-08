@@ -95,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 32),
 
                     // ── Destination Section ──
-                    _buildSectionTitle('Destinasi Unggulan'),
+                    _buildSectionTitle('Ringkasan Destinasi'),
                     const SizedBox(height: 16),
                     _buildDestinationSection(contentProv),
 
@@ -381,6 +381,27 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildEventSection(EventProvider prov) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    // Filter events: event date is today or in the future
+    final filteredEvents = prov.events.where((event) {
+      final eventDateRaw = DateTime.tryParse(event.startDate);
+      if (eventDateRaw == null) return false;
+      final eventDate = DateTime(eventDateRaw.year, eventDateRaw.month, eventDateRaw.day);
+      return !eventDate.isBefore(today);
+    }).toList();
+
+    // Sort by eventDate ascending
+    filteredEvents.sort((a, b) {
+      final dateA = DateTime.tryParse(a.startDate) ?? DateTime(1970);
+      final dateB = DateTime.tryParse(b.startDate) ?? DateTime(1970);
+      return dateA.compareTo(dateB);
+    });
+
+    // Display maximum of 3 events
+    final displayedEvents = filteredEvents.take(3).toList();
+
     return Column(
       children: [
         _buildSectionTitle(
@@ -413,20 +434,29 @@ class _HomeScreenState extends State<HomeScreen> {
               )),
             ),
           )
-        else if (prov.events.isEmpty)
+        else if (displayedEvents.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 30),
-            child: Center(child: Text('Belum ada jadwal event terbaru')),
+            child: Center(
+              child: Text(
+                'Belum ada event yang akan datang.',
+                style: TextStyle(
+                  fontSize: 14.5,
+                  color: AppTheme.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
           )
         else
           ListView.separated(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: prov.events.length > 2 ? 2 : prov.events.length,
+            itemCount: displayedEvents.length,
             separatorBuilder: (_, __) => const SizedBox(height: 14),
             itemBuilder: (context, index) {
-              final event = prov.events[index];
+              final event = displayedEvents[index];
               return _EventCard(
                 title: event.nameEvent,
                 location: event.location ?? '-',

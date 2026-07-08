@@ -42,8 +42,8 @@ class AuthProvider extends BaseProvider {
       _isLoginLoading = false;
       notifyListeners();
       return true;
-    } catch (e) {
-      handleDioError(e, defaultMessage: 'Login gagal. Periksa kembali email dan password Anda.');
+    } catch (e, stackTrace) {
+      handleDioError(e, defaultMessage: 'Login gagal. Periksa kembali email dan password Anda.', stackTrace: stackTrace);
       _isLoginLoading = false;
       notifyListeners();
       return false;
@@ -74,8 +74,8 @@ class AuthProvider extends BaseProvider {
 
       setLoading(false);
       return true;
-    } catch (e) {
-      handleDioError(e, defaultMessage: 'Registrasi gagal. Silakan coba lagi.');
+    } catch (e, stackTrace) {
+      handleDioError(e, defaultMessage: 'Registrasi gagal. Silakan coba lagi.', stackTrace: stackTrace);
       setLoading(false);
       return false;
     }
@@ -238,8 +238,8 @@ class AuthProvider extends BaseProvider {
       
       setLoading(false);
       return true;
-    } catch (e) {
-      handleDioError(e, defaultMessage: 'Gagal memperbarui profil. Silakan coba lagi.');
+    } catch (e, stackTrace) {
+      handleDioError(e, defaultMessage: 'Gagal memperbarui profil. Silakan coba lagi.', stackTrace: stackTrace);
       setLoading(false);
       return false;
     }
@@ -252,8 +252,8 @@ class AuthProvider extends BaseProvider {
       final response = await _authService.forgotPassword(email);
       setLoading(false);
       return response.data['message'];
-    } catch (e) {
-      handleDioError(e, defaultMessage: 'Gagal mengirim kode reset. Silakan coba lagi.');
+    } catch (e, stackTrace) {
+      handleDioError(e, defaultMessage: 'Gagal mengirim kode reset. Silakan coba lagi.', stackTrace: stackTrace);
       setLoading(false);
       return null;
     }
@@ -272,8 +272,8 @@ class AuthProvider extends BaseProvider {
       );
       setLoading(false);
       return true;
-    } catch (e) {
-      handleDioError(e, defaultMessage: 'Verifikasi kode gagal. Silakan coba lagi.');
+    } catch (e, stackTrace) {
+      handleDioError(e, defaultMessage: 'Verifikasi kode gagal. Silakan coba lagi.', stackTrace: stackTrace);
       setLoading(false);
       return false;
     }
@@ -296,8 +296,8 @@ class AuthProvider extends BaseProvider {
       );
       setLoading(false);
       return true;
-    } catch (e) {
-      handleDioError(e, defaultMessage: 'Gagal mereset password. Silakan coba lagi.');
+    } catch (e, stackTrace) {
+      handleDioError(e, defaultMessage: 'Gagal mereset password. Silakan coba lagi.', stackTrace: stackTrace);
       setLoading(false);
       return false;
     }

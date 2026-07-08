@@ -27,8 +27,25 @@ abstract class BaseProvider extends ChangeNotifier {
   }
 
   /// Utility to handle common Dio errors and parse messages
-  void handleDioError(dynamic e, {String? defaultMessage}) {
+  void handleDioError(dynamic e, {String? defaultMessage, StackTrace? stackTrace}) {
     _errors = {};
+
+    // Logging details
+    debugPrint('================ API ERROR LOGS ================');
+    if (e is DioException) {
+      debugPrint('Request URL: ${e.requestOptions.uri}');
+      debugPrint('HTTP Method: ${e.requestOptions.method}');
+      debugPrint('Status Code: ${e.response?.statusCode}');
+      debugPrint('Response Body: ${e.response?.data}');
+      debugPrint('Exception: $e');
+    } else {
+      debugPrint('Exception: $e');
+    }
+    if (stackTrace != null) {
+      debugPrint('StackTrace:\n$stackTrace');
+    }
+    debugPrint('================================================');
+
     if (e is DioException) {
       if (e.response != null) {
         final data = e.response?.data;
@@ -36,6 +53,8 @@ abstract class BaseProvider extends ChangeNotifier {
 
         if (statusCode == 401) {
           _errorMessage = 'Sesi login berakhir. Silakan login kembali.';
+        } else if (statusCode == 429) {
+          _errorMessage = 'Terlalu banyak percobaan. Silakan tunggu beberapa menit sebelum mencoba kembali.';
         } else if (statusCode == 413) {
           _errorMessage = 'Ukuran file terlalu besar. Maksimal 5MB.';
         } else if (statusCode == 422 && data is Map) {
